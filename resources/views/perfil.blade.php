@@ -18,7 +18,7 @@
                 @elseif(auth()->user()->rol === 'trabajador')
                     <span class="badge-profile-role role-worker-gradient"><i class="fas fa-user-tie"></i> Personal Técnico</span>
                 @else
-                    <span class="badge-profile-role role-client-gradient"><i class="fas fa-user-tag"></i> Cliente de Jayaque</span>
+                    <span class="badge-profile-role role-client-gradient"><i class="fas fa-user-tag"></i> Cliente de MovieSpace</span>
                 @endif
             </div>
         </div>

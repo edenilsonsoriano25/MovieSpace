@@ -8,6 +8,7 @@
         
         <div class="admin-page-header">
             <div class="header-left">
+                <span class="header-badge"><i class="fas fa-shield-alt"></i> Panel de Control Administrativo</span>
                 <h1 class="admin-main-title"><i class="fas fa-users"></i> Usuarios del Sistema</h1>
                 <p class="admin-main-subtitle">Administra los accesos globales, asigna roles operativos y audita las cuentas del personal y clientes de Jayaque.</p>
             </div>
@@ -34,7 +35,7 @@
             <div class="admin-stat-card border-glow-blue">
                 <div class="stat-icon-box icon-blue"><i class="fas fa-user-cog"></i></div>
                 <div class="stat-info">
-                    <div class="stat-number">{{ $usuarios->where('rol', 'admin')->count() }}</div>
+                    <div class="stat-number">{{ \App\Models\User::where('rol', 'admin')->count() }}</div>
                     <div class="stat-label">Administradores</div>
                 </div>
             </div>
@@ -42,7 +43,7 @@
             <div class="admin-stat-card border-glow-teal">
                 <div class="stat-icon-box icon-teal"><i class="fas fa-user-tie"></i></div>
                 <div class="stat-info">
-                    <div class="stat-number">{{ $usuarios->where('rol', 'trabajador')->count() }}</div>
+                    <div class="stat-number">{{ \App\Models\User::where('rol', 'trabajador')->count() }}</div>
                     <div class="stat-label">Trabajadores</div>
                 </div>
             </div>
@@ -50,7 +51,7 @@
             <div class="admin-stat-card border-glow-muted">
                 <div class="stat-icon-box icon-muted"><i class="fas fa-user"></i></div>
                 <div class="stat-info">
-                    <div class="stat-number">{{ $usuarios->where('rol', 'cliente')->count() }}</div>
+                    <div class="stat-number">{{ \App\Models\User::where('rol', 'cliente')->count() }}</div>
                     <div class="stat-label">Clientes Registrados</div>
                 </div>
             </div>
@@ -63,6 +64,7 @@
                         <th>ID</th>
                         <th>Nombre</th>
                         <th>Correo Electrónico</th>
+                        <th>DUI</th>
                         <th>Teléfono</th>
                         <th>Rol Asignado</th>
                         <th>Fecha Registro</th>
@@ -75,7 +77,8 @@
                         <td class="td-id">#{{ str_pad($usuario->id, 4, '0', STR_PAD_LEFT) }}</td>
                         <td class="td-name"><strong>{{ $usuario->name }}</strong></td>
                         <td class="td-email">{{ $usuario->email }}</td>
-                        <td class="td-phone">{{ $usuario->telefono ?? '—' }}</td>
+                        <td class="td-dui" style="font-family: monospace;">{{ $usuario->dui ?: '—' }}</td>
+                        <td class="td-phone">{{ $usuario->telefono ?: '—' }}</td>
                         <td>
                             @if($usuario->rol == 'admin')
                                 <span class="badge-role-pill role-pill-admin"><i class="fas fa-crown"></i> Admin</span>
@@ -119,23 +122,31 @@
             <h3><i class="fas fa-user-plus"></i> Agregar Nuevo Usuario</h3>
             <span class="close-modal-btn" onclick="closeModal()">&times;</span>
         </div>
-        <form action="{{ route('admin.usuarios.store') }}" method="POST" class="modal-premium-form">
-            @csrf
-            
-            <div class="modal-input-group">
-                <label for="modal-name">Nombre Completo</label>
-                <input type="text" name="name" id="modal-name" placeholder="Ej: Bryan Ismael Coreas" required>
-            </div>
-            
-            <div class="modal-input-group">
-                <label for="modal-email">Correo Electrónico</label>
-                <input type="email" name="email" id="modal-email" placeholder="correo@ejemplo.com" required>
-            </div>
-            
-            <div class="modal-form-row">
+        
+        <div class="modal-scroll-body">
+            <form action="{{ route('admin.usuarios.store') }}" method="POST" class="modal-premium-form" id="createUserForm">
+                @csrf
+                
                 <div class="modal-input-group">
-                    <label for="modal-phone">Teléfono <span class="label-optional">(Opcional)</span></label>
-                    <input type="text" name="telefono" id="modal-phone" placeholder="7000-0000">
+                    <label for="modal-name">Nombre Completo</label>
+                    <input type="text" name="name" id="modal-name" placeholder="Ej: Bryan Ismael Coreas" required>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="modal-email">Correo Electrónico</label>
+                    <input type="email" name="email" id="modal-email" placeholder="correo@ejemplo.com" required>
+                </div>
+
+                <div class="modal-form-row">
+                    <div class="modal-input-group">
+                        <label for="modal-dui">DUI <span class="label-optional">(Opcional)</span></label>
+                        <input type="text" name="dui" id="modal-dui" placeholder="00000000-0">
+                    </div>
+                    
+                    <div class="modal-input-group">
+                        <label for="modal-phone">Teléfono <span class="label-optional">(Opcional)</span></label>
+                        <input type="text" name="telefono" id="modal-phone" placeholder="7000-0000">
+                    </div>
                 </div>
                 
                 <div class="modal-input-group">
@@ -148,18 +159,23 @@
                         </select>
                     </div>
                 </div>
-            </div>
-            
-            <div class="modal-input-group">
-                <label for="modal-password">Contraseña Provisional</label>
-                <input type="password" name="password" id="modal-password" placeholder="••••••••" required>
-            </div>
-            
-            <div class="modal-premium-footer">
-                <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
-                <button type="submit" class="btn-modal-save">Guardar Registro</button>
-            </div>
-        </form>
+
+                <div class="modal-input-group">
+                    <label for="modal-direction">Dirección Residencial <span class="label-optional">(Opcional)</span></label>
+                    <input type="text" name="direccion" id="modal-direction" placeholder="Ej: Calle Principal, Jayaque">
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="modal-password">Contraseña Provisional</label>
+                    <input type="password" name="password" id="modal-password" placeholder="Mínimo 8 caracteres" minlength="8" required>
+                </div>
+            </form>
+        </div>
+
+        <div class="modal-premium-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeModal()">Cancelar</button>
+            <button type="submit" form="createUserForm" class="btn-modal-save">Guardar Registro</button>
+        </div>
     </div>
 </div>
 
@@ -167,7 +183,7 @@
     .admin-dark-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Cancela márgenes base */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -179,6 +195,21 @@
         align-items: center;
         margin-bottom: 3rem;
         gap: 1.5rem;
+    }
+
+    .header-badge {
+        background-color: rgba(255, 65, 108, 0.08);
+        color: #ff4b2b;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 0.5rem;
     }
 
     .admin-main-title {
@@ -224,7 +255,6 @@
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* REJILLA DE TARJETAS INFORMATIVAS (STATS) */
     .admin-stats-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
@@ -267,7 +297,6 @@
     .stat-number { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0; }
     .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
 
-    /* CONTENEDOR DE TABLA DE DATOS PREMIUM */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -302,24 +331,16 @@
     }
 
     .premium-data-table tbody tr:hover td {
-        background-color: #222731 !important; /* Un gris sutil que contrasta perfecto */
-        color: #ffffff !important;             /* Forzamos el texto a blanco puro */
+        background-color: #222731 !important;
+        color: #ffffff !important;
         cursor: pointer;
-    }
-    /* Asegurar el contraste de los textos secundarios en hover */
-    .premium-data-table tbody tr:hover .td-email,
-    .premium-data-table tbody tr:hover .td-phone,
-    .premium-data-table tbody tr:hover .td-date {
-        color: #e1e1e1 !important;
     }
 
     .td-id { font-family: monospace; color: #ff4b2b !important; font-weight: 600; }
     .td-name { color: #ffffff; }
     .td-email { color: #b3b3b3; }
-    .td-phone { font-family: monospace; }
     .td-date { color: #8a8a8a; font-size: 0.9rem; }
 
-    /* Badges de Roles */
     .badge-role-pill {
         font-size: 0.76rem;
         font-weight: 700;
@@ -349,7 +370,6 @@
         border: 1px solid rgba(255,255,255,0.02);
     }
 
-    /* Botón Eliminar de la Tabla */
     .btn-table-delete {
         background: rgba(244, 67, 54, 0.08);
         color: #ef5350;
@@ -379,7 +399,7 @@
         justify-content: center;
     }
 
-    /* MODAL CAPA OSCURA PREMIUM */
+    /* ── MAQUETACIÓN PREMIUM ARQUITECTÓNICA DEL MODAL ── */
     .modal-premium-overlay {
         display: none;
         position: fixed;
@@ -392,7 +412,7 @@
 
     .modal-premium-content {
         background-color: #1a1d24;
-        margin: 5% auto;
+        margin: 3% auto;
         width: 92%;
         max-width: 520px;
         border-radius: 16px;
@@ -400,10 +420,15 @@
         border: 1px solid rgba(255,255,255,0.03);
         animation: modalSlideDown 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         overflow: hidden;
+        
+        /* Forzamos control flex total para anclar elementos */
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
     }
 
     @keyframes modalSlideDown {
-        from { transform: translateY(-30px); opacity: 0; }
+        from { transform: translateY(-20px); opacity: 0; }
         to { transform: translateY(0); opacity: 1; }
     }
 
@@ -414,6 +439,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-shrink: 0; /* Bloquea el encogimiento */
     }
 
     .modal-premium-header h3 {
@@ -429,11 +455,18 @@
     }
     .close-modal-btn:hover { color: #ffffff; }
 
+    /* CONTENEDOR INTELIGENTE CON SCROLL DINÁMICO */
+    .modal-scroll-body {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding: 0.5rem 0;
+    }
+
     .modal-premium-form {
-        padding: 1.5rem;
+        padding: 1rem 1.5rem;
         display: flex;
         flex-direction: column;
-        gap: 1.25rem;
+        gap: 1rem;
     }
 
     .modal-form-row { display: flex; gap: 1.25rem; }
@@ -463,7 +496,6 @@
         border-color: #ff4b2b;
     }
 
-    /* Custom Select arrow inject */
     .select-wrapper { position: relative; width: 100%; }
     .select-wrapper select { appearance: none; -webkit-appearance: none; padding-right: 35px; cursor: pointer;}
     .select-wrapper::after {
@@ -472,13 +504,15 @@
         transform: translateY(-50%); pointer-events: none;
     }
 
+    /* PIE DE MODAL BLINDADO CONTRA DESPLAZAMIENTOS */
     .modal-premium-footer {
-        margin-top: 0.75rem;
+        background-color: #121419;
         display: flex;
         justify-content: flex-end;
         gap: 0.75rem;
         border-top: 1px solid rgba(255,255,255,0.04);
-        padding-top: 1.25rem;
+        padding: 1rem 1.5rem;
+        flex-shrink: 0; /* Forzado a mantenerse estático en la base */
     }
 
     .btn-modal-cancel {
@@ -494,7 +528,6 @@
     }
     .btn-modal-save:hover { transform: translateY(-1px); }
 
-    /* Parches de Toasts temporales */
     .toast-alert {
         display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 10px;
         color: #fff; font-weight: 600; font-size: 0.9rem; margin-bottom: 1.5rem;
@@ -506,7 +539,7 @@
 
     @media (max-width: 768px) {
         .admin-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        .modal-form-row { flex-direction: column; gap: 1.25rem; }
+        .modal-form-row { flex-direction: column; gap: 1rem; }
     }
 </style>
 
@@ -518,13 +551,14 @@ function showAddUserModal() {
 
 function closeModal() {
     document.getElementById('addUserModal').style.display = 'none';
+    document.getElementById('createUserForm').reset();
 }
 
-// Cerrar modal automáticamente si se hace un clic exterior en la capa difuminada
 window.onclick = function(event) {
     const modal = document.getElementById('addUserModal');
     if (event.target == modal) {
         modal.style.display = "none";
+        document.getElementById('createUserForm').reset();
     }
 }
 

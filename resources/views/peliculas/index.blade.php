@@ -10,7 +10,7 @@
             <h1 class="catalog-title">
                 <i class="fas fa-film"></i> Catálogo de Películas
             </h1>
-            <p class="catalog-subtitle">Busca tus títulos favoritos y verifica la disponibilidad de copias físicas en nuestra sucursal de Jayaque.</p>
+            <p class="catalog-subtitle">Busca tus títulos favoritos y verifica la disponibilidad de copias físicas en nuestra sucursal de Santa Tecla.</p>
             
             <div class="search-box-container">
                 <span class="search-icon"><i class="fas fa-search"></i></span>
