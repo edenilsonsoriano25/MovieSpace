@@ -1,261 +1,511 @@
 @extends('layouts.app')
 
-@section('title', 'Reportes')
+@section('title', 'Reportes Financieros')
 
 @section('content')
-<div class="container">
-    <div class="page-header">
-        <h1><i class="fas fa-chart-line"></i> Reportes Financieros</h1>
-        <div class="header-buttons">
-            <select id="mesReporte" class="form-select">
-                <option value="1">Enero</option>
-                <option value="2">Febrero</option>
-                <option value="3">Marzo</option>
-                <option value="4">Abril</option>
-                <option value="5">Mayo</option>
-                <option value="6">Junio</option>
-                <option value="7">Julio</option>
-                <option value="8">Agosto</option>
-                <option value="9">Septiembre</option>
-                <option value="10">Octubre</option>
-                <option value="11">Noviembre</option>
-                <option value="12">Diciembre</option>
-            </select>
-            <select id="anioReporte" class="form-select">
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-                <option value="2025">2025</option>
-                <option value="2026" selected>2026</option>
-            </select>
-            <button class="btn-primary" onclick="generarPDF()">
-                <i class="fas fa-file-pdf"></i> Generar PDF
-            </button>
+<div class="reports-dark-wrapper">
+    <div class="container-fluid px-4 px-md-5">
+        
+        <div class="reports-page-header">
+            <div class="header-left">
+                <h1 class="reports-main-title"><i class="fas fa-chart-line"></i> Reportes Financieros</h1>
+                <p class="reports-main-subtitle">Analiza el rendimiento contable, balances de caja y estadísticas operacionales globales.</p>
+            </div>
+            
+            <div class="header-filters-group">
+                <div class="select-wrapper">
+                    <select id="mesReporte">
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <select id="anioReporte">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                    </select>
+                </div>
+                <button class="btn-premium-action btn-generate-pdf" onclick="generarPDF()">
+                    <i class="fas fa-file-pdf"></i> Generar PDF
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="stats-cards">
-        <div class="stat-card blue">
-            <i class="fas fa-shopping-cart"></i>
-            <div class="number">{{ $totalPrestamos }}</div>
-            <div class="label">Total Préstamos</div>
-        </div>
-        <div class="stat-card green">
-            <i class="fas fa-dollar-sign"></i>
-            <div class="number">${{ number_format($totalIngresos, 2) }}</div>
-            <div class="label">Ingresos Totales</div>
-        </div>
-        <div class="stat-card orange">
-            <i class="fas fa-clock"></i>
-            <div class="number">{{ $prestamosActivos }}</div>
-            <div class="label">Préstamos Activos</div>
-        </div>
-        <div class="stat-card purple">
-            <i class="fas fa-chart-pie"></i>
-            <div class="number">{{ number_format(($prestamosActivos / max($totalPrestamos, 1)) * 100, 1) }}%</div>
-            <div class="label">Tasa Activos</div>
-        </div>
-    </div>
+        <div class="reports-stats-grid">
+            <div class="reports-stat-card border-glow-blue">
+                <div class="stat-icon-box icon-blue"><i class="fas fa-shopping-cart"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $totalPrestamos }}</div>
+                    <div class="stat-label">Total Préstamos</div>
+                </div>
+            </div>
+            
+            <div class="reports-stat-card border-glow-teal">
+                <div class="stat-icon-box icon-teal"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">${{ number_format($totalIngresos, 2) }}</div>
+                    <div class="stat-label">Ingresos Totales</div>
+                </div>
+            </div>
+            
+            <div class="reports-stat-card border-glow-orange">
+                <div class="stat-icon-box icon-orange"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $prestamosActivos }}</div>
+                    <div class="stat-label">Préstamos Activos</div>
+                </div>
+            </div>
 
-    <div class="charts-container">
-        <div class="chart-box">
-            <h3><i class="fas fa-chart-bar"></i> Préstamos por Mes</h3>
-            <canvas id="prestamosChart"></canvas>
+            <div class="reports-stat-card border-glow-purple">
+                <div class="stat-icon-box icon-purple"><i class="fas fa-chart-pie"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ number_format(($prestamosActivos / max($totalPrestamos, 1)) * 100, 1) }}%</div>
+                    <div class="stat-label">Tasa de Activos</div>
+                </div>
+            </div>
         </div>
-        <div class="chart-box">
-            <h3><i class="fas fa-chart-pie"></i> Distribución de Pagos</h3>
-            <canvas id="pagosChart"></canvas>
-        </div>
-    </div>
 
-    <div class="data-table">
-        <h3><i class="fas fa-table"></i> Resumen Mensual</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Mes</th>
-                    <th>Préstamos</th>
-                    <th>Ingresos</th>
-                    <th>Multas</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                @endphp
-                @foreach($meses as $index => $mes)
-                <tr>
-                    <td>{{ $mes }}</td>
-                    <td>{{ rand(5, 30) }}</td>
-                    <td>${{ number_format(rand(50, 300), 2) }}</td>
-                    <td>${{ number_format(rand(0, 50), 2) }}</td>
-                    <td class="text-success">${{ number_format(rand(50, 350), 2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div class="charts-streaming-grid">
+            <div class="chart-premium-box">
+                <h3 class="chart-box-title"><i class="fas fa-chart-bar"></i> Préstamos e Ingresos Anuales</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="prestamosChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-premium-box">
+                <h3 class="chart-box-title"><i class="fas fa-chart-pie"></i> Distribución de Canales de Pago</h3>
+                <div class="canvas-wrapper">
+                    <canvas id="pagosChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="premium-table-wrapper">
+            <div class="table-premium-header">
+                <h3><i class="fas fa-table"></i> Historial Consolidador Mensual</h3>
+            </div>
+            <table class="premium-data-table">
+                <thead>
+                    <tr>
+                        <th>Mes de Gestión</th>
+                        <th>Préstamos Procesados</th>
+                        <th>Ingresos por Alquiler</th>
+                        <th>Recargos por Multas</th>
+                        <th style="text-align: right;">Total Neto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                    @endphp
+                    @foreach($meses as $index => $mes)
+                    <tr>
+                        <td class="td-month"><strong>{{ $mes }}</strong></td>
+                        <td>{{ rand(15, 45) }} ords.</td>
+                        <td class="text-white-50">${{ number_format(rand(100, 400), 2) }}</td>
+                        <td class="text-danger-fine">${{ number_format(rand(0, 45), 2) }}</td>
+                        <td class="td-total-net">${{ number_format(rand(150, 450), 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// Gráfico de barras
-const ctx = document.getElementById('prestamosChart').getContext('2d');
-new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        datasets: [{
-            label: 'Préstamos',
-            data: [12, 19, 15, 17, 14, 22, 25, 28, 20, 18, 15, 10],
-            backgroundColor: '#667eea',
-            borderRadius: 5
-        }, {
-            label: 'Ingresos ($)',
-            data: [120, 190, 150, 170, 140, 220, 250, 280, 200, 180, 150, 100],
-            backgroundColor: '#4caf50',
-            borderRadius: 5
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'top' }
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuración global de fuentes y colores para Chart.js en modo oscuro
+    Chart.defaults.color = '#8a8a8a';
+    Chart.defaults.font.family = "'Segoe UI', sans-serif";
+
+    // 1. Gráfico de Barras Combinado
+    const ctx = document.getElementById('prestamosChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            datasets: [{
+                label: 'Préstamos Emitidos',
+                data: [22, 31, 25, 27, 34, 42, 49, 45, 38, 29, 25, 20],
+                backgroundColor: 'rgba(255, 65, 108, 0.85)',
+                borderRadius: 6,
+                borderSkipped: false
+            }, {
+                label: 'Ingresos Netos ($)',
+                data: [150, 210, 180, 195, 240, 310, 350, 320, 270, 210, 180, 140],
+                backgroundColor: 'rgba(46, 196, 182, 0.85)',
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', labels: { boxWidth: 12, font: { weight: '600' } } }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: 'rgba(255, 255, 255, 0.04)' } }
+            }
         }
-    }
+    });
+
+    // 2. Gráfico Circular Estilizado
+    const ctx2 = document.getElementById('pagosChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: ['Alquileres de Portada', 'Multas por Mora'],
+            datasets: [{
+                data: [88, 12],
+                backgroundColor: ['#ff4b2b', '#2ec4b6'],
+                borderWidth: 4,
+                borderColor: '#1a1d24',
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { weight: '600' } } }
+            },
+            cutout: '70%'
+        }
+    });
 });
 
-// Gráfico circular
-const ctx2 = document.getElementById('pagosChart').getContext('2d');
-new Chart(ctx2, {
-    type: 'pie',
-    data: {
-        labels: ['Alquileres', 'Multas'],
-        datasets: [{
-            data: [85, 15],
-            backgroundColor: ['#667eea', '#ff9800'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: { position: 'bottom' }
-        }
-    }
-});
-
+// Función Refactorizada para Generar PDF Ejecutivo Limpio en A4 (Fondo Blanco para Imprimir)
 function generarPDF() {
-    const mes = document.getElementById('mesReporte').value;
-    const anio = document.getElementById('anioReporte').value;
     const nombreMes = document.getElementById('mesReporte').options[document.getElementById('mesReporte').selectedIndex].text;
+    const anio = document.getElementById('anioReporte').value;
     
+    // Alerta estilizada táctil
+    Swal.fire({
+        title: 'Procesando Documento',
+        text: `Compilando balance financiero de ${nombreMes} ${anio}...`,
+        icon: 'info',
+        background: '#1a1d24',
+        color: '#ffffff',
+        showConfirmButton: false,
+        timer: 2000
+    });
+
     const element = document.createElement('div');
     element.innerHTML = `
-        <div style="padding: 2rem; font-family: Arial, sans-serif;">
-            <div style="text-align: center; margin-bottom: 2rem;">
-                <h1>📊 MovieSpace - Reporte Financiero</h1>
-                <h3>${nombreMes} ${anio}</h3>
-                <p>Fecha de generación: ${new Date().toLocaleString()}</p>
-            </div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-                <div style="border: 1px solid #ddd; padding: 1rem; text-align: center; border-radius: 10px;">
-                    <h3>Total Préstamos</h3>
-                    <p style="font-size: 2rem; color: #667eea;">{{ $totalPrestamos }}</p>
+        <div style="padding: 40px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #2b2b2b; background-color: #ffffff;">
+            
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 40px;">
+                <tr>
+                    <td>
+                        <h1 style="margin: 0; color: #ff4b2b; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">MOVIESPACE</h1>
+                        <p style="margin: 4px 0 0 0; color: #6c757d; font-size: 12px; font-weight: 600; text-uppercase: uppercase;">Sistema de Control de Inventarios</p>
+                    </td>
+                    <td style="text-align: right; vertical-align: top;">
+                        <h2 style="margin: 0; color: #1a1d24; font-size: 18px; font-weight: 700;">REPORTE FINANCIERO</h2>
+                        <p style="margin: 4px 0 0 0; color: #ff4b2b; font-size: 14px; font-weight: 700;">Período: ${nombreMes} — ${anio}</p>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="height: 1px; background-color: #e9ecef; margin-bottom: 30px;"></div>
+
+            <table style="width: 100%; margin-bottom: 40px; font-size: 13px; color: #495057;">
+                <tr>
+                    <td><strong>Sucursal Operativa:</strong> Jayaque, El Salvador</td>
+                    <td style="text-align: right;"><strong>Fecha Emisión:</strong> ${new Date().toLocaleDateString('es-SV')}</td>
+                </tr>
+                <tr>
+                    <td><strong>Estado de Auditoría:</strong> Cierre mensual consolidado</td>
+                    <td style="text-align: right;"><strong>Hora Registro:</strong> ${new Date().toLocaleTimeString('es-SV', {hour: '2-digit', minute:'2-digit'})}</td>
+                </tr>
+            </table>
+
+            <div style="display: flex; justify-content: space-between; gap: 20px; margin-bottom: 45px;">
+                <div style="flex: 1; border: 1px solid #dee2e6; padding: 20px; text-align: center; border-radius: 12px; background-color: #f8f9fa;">
+                    <span style="font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Total Préstamos</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #1a1d24;">{{ $totalPrestamos }}</span>
                 </div>
-                <div style="border: 1px solid #ddd; padding: 1rem; text-align: center; border-radius: 10px;">
-                    <h3>Ingresos Totales</h3>
-                    <p style="font-size: 2rem; color: #4caf50;">${{ number_format($totalIngresos, 2) }}</p>
+                <div style="flex: 1; border: 1px solid #dee2e6; padding: 20px; text-align: center; border-radius: 12px; background-color: #f8f9fa;">
+                    <span style="font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Ingresos Brutos</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #2ec4b6;">$${parseFloat('{{ $totalIngresos }}').toFixed(2)}</span>
                 </div>
-                <div style="border: 1px solid #ddd; padding: 1rem; text-align: center; border-radius: 10px;">
-                    <h3>Préstamos Activos</h3>
-                    <p style="font-size: 2rem; color: #ff9800;">{{ $prestamosActivos }}</p>
+                <div style="flex: 1; border: 1px solid #dee2e6; padding: 20px; text-align: center; border-radius: 12px; background-color: #f8f9fa;">
+                    <span style="font-size: 11px; font-weight: 700; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Cuentas Activas</span>
+                    <span style="font-size: 28px; font-weight: 800; color: #ff9f43;">{{ $prestamosActivos }}</span>
                 </div>
             </div>
-            <div style="border-top: 2px solid #667eea; padding-top: 1rem;">
-                <p style="text-align: center;">Reporte generado por MovieSpace - Sistema de Alquiler de Películas</p>
+
+            <div style="background-color: #fff9db; border-left: 4px solid #fcc419; padding: 15px; border-radius: 6px; font-size: 12px; line-height: 1.5; color: #664d03; margin-bottom: 50px;">
+                <strong>Nota de Certificación:</strong> Este documento constituye un balance financiero algorítmico generado por el software MovieSpace basándose en las transacciones vigentes en bases de datos relacionales. Válido para revisiones de contabilidad operativa de fin de mes.
             </div>
+
+            <table style="width: 100%; margin-top: 100px; font-size: 12px; color: #6c757d;">
+                <tr>
+                    <td style="text-align: center; width: 50%;">
+                        <div style="width: 180px; border-bottom: 1px solid #dee2e6; margin: 0 auto 8px auto;"></div>
+                        Firma de Administrador General
+                    </td>
+                    <td style="text-align: center; width: 50%;">
+                        <div style="width: 180px; border-bottom: 1px solid #dee2e6; margin: 0 auto 8px auto;"></div>
+                        Sello de Auditoría Interna
+                    </td>
+                </tr>
+            </table>
         </div>
     `;
     
     const opt = {
-        margin: [1, 1, 1, 1],
-        filename: `reporte_${nombreMes}_${anio}.pdf`,
+        margin: [0.3, 0.3, 0.3, 0.3],
+        filename: `Reporte_Financiero_${nombreMes}_${anio}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
     
-    html2pdf().set(opt).from(element).save();
-    
-    alert(`📄 Generando reporte de ${nombreMes} ${anio}...`);
+    setTimeout(() => {
+        html2pdf().set(opt).from(element).save();
+    }, 500);
 }
 </script>
 
 <style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    color: white;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-.header-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-}
-.form-select {
-    padding: 0.5rem;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    background: white;
-}
-.stats-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.stat-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-.stat-card:hover { transform: translateY(-5px); }
-.stat-card.blue { border-bottom: 4px solid #2196f3; }
-.stat-card.green { border-bottom: 4px solid #4caf50; }
-.stat-card.orange { border-bottom: 4px solid #ff9800; }
-.stat-card.purple { border-bottom: 4px solid #9c27b0; }
-.stat-card i { font-size: 2rem; margin-bottom: 0.5rem; }
-.stat-card .number { font-size: 2rem; font-weight: bold; }
-.stat-card .label { color: #666; }
-.charts-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.chart-box {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-.chart-box h3 { margin-bottom: 1rem; color: #333; }
-.data-table { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-.data-table h3 { padding: 1rem; margin: 0; background: #f8f9fa; }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
-th { background: #667eea; color: white; }
-tr:hover { background: #f5f5f5; }
-.text-success { color: #4caf50; font-weight: bold; }
-.btn-primary { background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; }
+    .reports-dark-wrapper {
+        background-color: #0f1115;
+        min-height: 100vh;
+        margin-top: -2rem;
+        padding: 3rem 0 5rem 0;
+        color: #ffffff;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .reports-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .reports-main-title {
+        font-size: 2.6rem;
+        font-weight: 800;
+        margin: 0 0 0.4rem 0;
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .reports-main-title i {
+        color: #ff4b2b;
+        -webkit-text-fill-color: initial;
+        margin-right: 10px;
+    }
+
+    .reports-main-subtitle {
+        color: #6c757d;
+        font-size: 0.98rem;
+        margin: 0;
+    }
+
+    /* Grupo de Filtros Desplegables */
+    .header-filters-group {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .header-filters-group select {
+        padding: 11px 35px 11px 16px;
+        background-color: #1a1d24;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        outline: none;
+        cursor: pointer;
+        font-family: inherit;
+        transition: border 0.2s;
+    }
+
+    .header-filters-group select:focus { border-color: #ff4b2b; }
+
+    /* Custom Injected Select wrapper arrow */
+    .select-wrapper { position: relative; }
+    .header-filters-group select { appearance: none; -webkit-appearance: none; }
+    .select-wrapper::after {
+        content: '\f078'; font-family: 'Font Awesome 5 Free'; font-weight: 900;
+        font-size: 0.7rem; color: #6c757d; position: absolute; right: 14px; top: 50%;
+        transform: translateY(-50%); pointer-events: none;
+    }
+
+    .btn-generate-pdf {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: #ffffff;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-generate-pdf:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
+    }
+
+    /* REJILLA DE KPIS DE NEGOCIO */
+    .reports-stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+        gap: 1.5rem !important;
+        margin-bottom: 3rem;
+        width: 100%;
+    }
+
+    .reports-stat-card {
+        background-color: #1a1d24;
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .border-glow-blue { border-left: 4px solid #2196f3; }
+    .border-glow-teal { border-left: 4px solid #2ec4b6; }
+    .border-glow-orange { border-left: 4px solid #ff9f43; }
+    .border-glow-purple { border-left: 4px solid #9c27b0; }
+
+    .stat-icon-box {
+        width: 48px;
+        height: 48px;
+        background-color: #111317;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .icon-blue { color: #2196f3; }
+    .icon-teal { color: #2ec4b6; }
+    .icon-orange { color: #ff9f43; }
+    .icon-purple { color: #9c27b0; }
+
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0; }
+    .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
+
+    /* REJILLA DE CONTENEDORES DE GRÁFICOS (CANVAS) */
+    .charts-streaming-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important;
+        gap: 2rem !important;
+        margin-bottom: 3rem;
+        width: 100%;
+    }
+
+    .chart-premium-box {
+        background-color: #1a1d24;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .chart-box-title {
+        color: #ffffff;
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin: 0 0 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .chart-box-title i { color: #ff4b2b; }
+    .canvas-wrapper { position: relative; height: 260px; width: 100%; }
+
+    /* TABLA DE RESUMEN NETO */
+    .premium-table-wrapper {
+        background-color: #1a1d24;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .table-premium-header {
+        padding: 1.25rem 1.5rem;
+        background-color: #121419;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .table-premium-header h3 {
+        margin: 0; color: #ffffff; font-size: 1.1rem; font-weight: 700;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .table-premium-header h3 i { color: #ff4b2b; }
+
+    .premium-data-table { width: 100%; border-collapse: collapse; }
+    
+    .premium-data-table th {
+        background-color: #15181e; color: #ffffff; font-size: 0.88rem;
+        font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+        padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .premium-data-table td {
+        padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.02);
+        color: #b3b3b3; font-size: 0.95rem; background-color: #1a1d24 !important;
+    }
+
+    /* Evita el bug del texto invisible forzando gris oscuro en hover */
+    .premium-data-table tbody tr:hover td {
+        background-color: #222731 !important;
+        color: #ffffff !important;
+        cursor: pointer;
+    }
+
+    .td-month { color: #ffffff; }
+    .text-danger-fine { color: #ef5350; font-family: monospace; font-weight: 600; }
+    .td-total-net { text-align: right; color: #2ec4b6 !important; font-weight: 700; font-family: monospace; font-size: 1.05rem; }
+
+    @media (max-width: 768px) {
+        .reports-page-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+        .header-filters-group { width: 100%; }
+        .header-filters-group .select-wrapper, .btn-generate-pdf { flex: 1; width: 100%; }
+        .charts-streaming-grid { grid-template-columns: 1fr !important; }
+    }
 </style>
 @endsection

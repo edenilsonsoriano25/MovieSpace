@@ -3,92 +3,358 @@
 @section('title', 'Dashboard Administrador')
 
 @section('content')
-<div class="container">
-    <h1 style="color: white; margin-bottom: 2rem;">
-        <i class="fas fa-chart-line"></i> Panel de Administración
-    </h1>
-    
-    <div class="dashboard-grid">
-        <div class="dashboard-card">
-            <i class="fas fa-film"></i>
-            <h3>Gestionar Catálogo</h3>
-            <p>Agregar, editar o eliminar películas</p>
-            <a href="{{ route('admin.peliculas.index') }}" class="card-btn">Ir →</a>
-        </div>
+<div class="dash-dark-wrapper">
+    <div class="container-fluid px-4 px-md-5">
         
-        <div class="dashboard-card">
-            <i class="fas fa-users"></i>
-            <h3>Gestionar Usuarios</h3>
-            <p>Administrar clientes y trabajadores</p>
-            <a href="{{ route('admin.usuarios.index') }}" class="card-btn">Ir →</a>
+        <!-- ENCABEZADO DE BIENVENIDA -->
+        <div class="dash-header">
+            <h1 class="dash-title">
+                <i class="fas fa-chart-line"></i> Panel de Administración
+            </h1>
+            <p class="dash-subtitle">Bienvenido al centro de control de MovieSpace. Monitorea transacciones, inventarios y operaciones en Jayaque.</p>
         </div>
-        
-        <div class="dashboard-card">
-            <i class="fas fa-chart-bar"></i>
-            <h3>Reportes</h3>
-            <p>Ver estadísticas y generar reportes</p>
-            <a href="{{ route('admin.reportes.index') }}" class="card-btn">Ir →</a>
+
+        <!-- SECCIÓN 1: TARJETAS DE MÉTRICAS EN TIEMPO REAL (KPI CARDS) -->
+        <div class="metrics-grid">
+            
+            <!-- Métrica: Ingresos de Caja -->
+            <div class="metric-card card-revenue">
+                <div class="metric-icon-box">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <div class="metric-data">
+                    <span class="metric-label">Caja del Día</span>
+                    <h2 class="metric-value">$0.00</h2>
+                    <span class="metric-trend text-success"><i class="fas fa-arrow-up"></i> Flujo activo</span>
+                </div>
+            </div>
+
+            <!-- Métrica: Alquileres Activos -->
+            <div class="metric-card card-rentals">
+                <div class="metric-icon-box">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="metric-data">
+                    <span class="metric-label">CDs en Custodia</span>
+                    <h2 class="metric-value">0</h2>
+                    <span class="metric-trend text-muted">Préstamos vigentes</span>
+                </div>
+            </div>
+
+            <!-- Métrica: Películas en Catálogo -->
+            <div class="metric-card card-inventory">
+                <div class="metric-icon-box">
+                    <i class="fas fa-film"></i>
+                </div>
+                <div class="metric-data">
+                    <span class="metric-label">Títulos Registrados</span>
+                    <h2 class="metric-value">0</h2>
+                    <span class="metric-trend text-info">Copias en estante</span>
+                </div>
+            </div>
+
+            <!-- Métrica: Alertas Críticas (Mora) -->
+            <div class="metric-card card-alerts">
+                <div class="metric-icon-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="metric-data">
+                    <span class="metric-label">Devoluciones Retrasadas</span>
+                    <h2 class="metric-value text-danger">0</h2>
+                    <span class="metric-trend text-danger">⚠️ Requiere auditoría</span>
+                </div>
+            </div>
+
         </div>
-        
-        <div class="dashboard-card">
-            <i class="fas fa-exchange-alt"></i>
-            <h3>Préstamos</h3>
-            <p>Gestionar préstamos activos</p>
-            <a href="{{ route('prestamos.index') }}" class="card-btn">Ir →</a>
+
+        <h3 class="dash-section-divider"><i class="fas fa-th-large"></i> Accesos y Herramientas de Gestión</h3>
+
+        <!-- SECCIÓN 2: CUADRÍCULA DE CONTROL (ACCESOS DIRECTOS MEJORADOS) -->
+        <div class="dashboard-grid">
+            
+            <!-- Tarjeta: Gestionar Catálogo -->
+            <div class="dashboard-premium-card">
+                <div class="card-glow-bg"></div>
+                <div class="card-premium-content">
+                    <div class="premium-card-icon"><i class="fas fa-clapperboard"></i></div>
+                    <h3>Gestionar Catálogo</h3>
+                    <p>Agrega nuevos ingresos de películas, actualiza precios y controla el stock físico.</p>
+                    <a href="{{ route('admin.peliculas.index') }}" class="premium-card-btn">
+                        <span>Configurar</span> <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tarjeta: Gestionar Usuarios -->
+            <div class="dashboard-premium-card">
+                <div class="card-glow-bg"></div>
+                <div class="card-premium-content">
+                    <div class="premium-card-icon"><i class="fas fa-users"></i></div>
+                    <h3>Gestionar Usuarios</h3>
+                    <p>Administra las cuentas de accesos, roles y perfiles del personal técnico y clientes.</p>
+                    <a href="{{ route('admin.usuarios.index') }}" class="premium-card-btn">
+                        <span>Configurar</span> <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tarjeta: Reportes Estadísticos -->
+            <div class="dashboard-premium-card">
+                <div class="card-glow-bg"></div>
+                <div class="card-premium-content">
+                    <div class="premium-card-icon"><i class="fas fa-chart-bar"></i></div>
+                    <h3>Reportes y Métricas</h3>
+                    <p>Genera archivos PDF de contabilidad, revisa ingresos históricos y estadísticas de arriendos.</p>
+                    <a href="{{ route('admin.reportes.index') }}" class="premium-card-btn">
+                        <span>Configurar</span> <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tarjeta: Préstamos Globales -->
+            <div class="dashboard-premium-card">
+                <div class="card-glow-bg"></div>
+                <div class="card-premium-content">
+                    <div class="premium-card-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <h3>Control de Préstamos</h3>
+                    <p>Monitorea todas las salidas de CDs, fechas de expiración y recepciones en mostrador.</p>
+                    <a href="{{ route('prestamos.index') }}" class="premium-card-btn">
+                        <span>Configurar</span> <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Tarjeta: Gestión de Caja -->
+            <div class="dashboard-premium-card">
+                <div class="card-glow-bg"></div>
+                <div class="card-premium-content">
+                    <div class="premium-card-icon"><i class="fas fa-cash-register"></i></div>
+                    <h3>Auditoría de Caja</h3>
+                    <p>Verifica transacciones del día, métodos de pago procesados y balances financieros.</p>
+                    <a href="{{ route('pagos.index') }}" class="premium-card-btn">
+                        <span>Configurar</span> <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+
         </div>
-        
-        <div class="dashboard-card">
-            <i class="fas fa-cash-register"></i>
-            <h3>Caja</h3>
-            <p>Ver transacciones y caja diaria</p>
-            <a href="{{ route('pagos.index') }}" class="card-btn">Ir →</a>
-        </div>
+
     </div>
 </div>
 
+<!-- HOJA DE ESTILOS ENCAPSULADA DE ALTA FIDELIDAD PARA EL DASHBOARD -->
 <style>
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
-}
-.dashboard-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-.dashboard-card:hover {
-    transform: translateY(-5px);
-}
-.dashboard-card i {
-    font-size: 2.5rem;
-    color: #667eea;
-    margin-bottom: 1rem;
-}
-.dashboard-card h3 {
-    margin-bottom: 0.5rem;
-    color: #333;
-}
-.dashboard-card p {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-}
-.card-btn {
-    display: inline-block;
-    background: #667eea;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background 0.3s;
-}
-.card-btn:hover {
-    background: #5a67d8;
-}
+    .dash-dark-wrapper {
+        background-color: #0f1115;
+        min-height: 100vh;
+        margin-top: -2rem; /* Sincroniza con el app.blade.php */
+        padding: 3rem 0 5rem 0;
+        color: #ffffff;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .dash-header {
+        margin-bottom: 3rem;
+    }
+
+    .dash-title {
+        font-size: 2.6rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .dash-title i {
+        color: #ff4b2b;
+        -webkit-text-fill-color: initial;
+        margin-right: 12px;
+    }
+
+    .dash-subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* REJILLA DE TARJETAS DE MÉTRICAS (KPIs) */
+    .metrics-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+        gap: 1.5rem !important;
+        margin-bottom: 4rem;
+        width: 100%;
+    }
+
+    .metric-card {
+        background-color: #1a1d24;
+        border-radius: 14px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .metric-icon-box {
+        width: 50px;
+        height: 50px;
+        background-color: #111317;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        color: #ff4b2b;
+    }
+
+    .metric-data {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metric-label {
+        font-size: 0.75rem;
+        color: #6c757d;
+        font-weight: 700;
+        text-uppercase: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin: 0.1rem 0;
+    }
+
+    .metric-trend {
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .text-success { color: #2ec4b6; }
+    .text-info { color: #ff416c; }
+    .text-muted { color: #495057; }
+    .text-danger { color: #f03e3e; }
+
+    /* SECCIÓN DE ACCESOS DIRECTOS */
+    .dash-section-divider {
+        color: #ffffff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 1.75rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        padding-bottom: 0.75rem;
+    }
+
+    .dash-section-divider i {
+        color: #ff4b2b;
+    }
+
+    .dashboard-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+        gap: 2rem !important;
+        width: 100%;
+    }
+
+    /* Tarjetas de herramientas premium interactiva */
+    .dashboard-premium-card {
+        background-color: #1a1d24;
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.02);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .dashboard-premium-card:hover {
+        transform: translateY(-6px);
+    }
+
+    /* Efecto de resplandor trasero oculto en hover */
+    .card-glow-bg {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at top right, rgba(255, 75, 43, 0.15), transparent 60%);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 1;
+    }
+
+    .dashboard-premium-card:hover .card-glow-bg {
+        opacity: 1;
+    }
+
+    .card-premium-content {
+        padding: 2rem;
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    .premium-card-icon {
+        font-size: 2.2rem;
+        color: #ff4b2b;
+        margin-bottom: 1.25rem;
+        display: inline-block;
+    }
+
+    .card-premium-content h3 {
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0 0 0.6rem 0;
+    }
+
+    .card-premium-content p {
+        color: #8a8a8a;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin: 0 0 1.75rem 0;
+    }
+
+    /* Botón de control premium */
+    .premium-card-btn {
+        margin-top: auto;
+        background-color: #111317;
+        color: #d1d1d1;
+        border: 1px solid rgba(255,255,255,0.05);
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s ease;
+    }
+
+    .dashboard-premium-card:hover .premium-card-btn {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+    }
+
+    .premium-card-btn i {
+        font-size: 0.75rem;
+        transition: transform 0.2s;
+    }
+
+    .dashboard-premium-card:hover .premium-card-btn i {
+        transform: translateX(3px);
+    }
 </style>
 @endsection

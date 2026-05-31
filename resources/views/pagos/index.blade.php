@@ -3,132 +3,417 @@
 @section('title', 'Caja y Pagos')
 
 @section('content')
-<div class="container">
-    <div class="page-header">
-        <h1><i class="fas fa-cash-register"></i> Caja Chica</h1>
-        <div class="header-buttons">
-            <button class="btn-primary" onclick="window.location.href='{{ route('caja.index') }}'">
-                <i class="fas fa-chart-line"></i> Resumen del Día
-            </button>
+<div class="cash-history-wrapper">
+    <div class="container-fluid px-4 px-md-5">
+        
+        <div class="cash-page-header">
+            <div class="header-left">
+                <h1 class="cash-main-title"><i class="fas fa-cash-register"></i> Caja Chica</h1>
+                <p class="cash-main-subtitle">Monitorea los flujos de ingresos globales, revisa la distribución por métodos de pago y audita el historial de transacciones.</p>
+            </div>
+            <div class="header-buttons">
+                <a href="{{ route('caja.index') }}" class="btn-premium-action btn-summary-link">
+                    <i class="fas fa-chart-line"></i> Resumen del Día
+                </a>
+            </div>
         </div>
-    </div>
 
-    <div class="stats-cards">
-        <div class="stat-card blue">
-            <i class="fas fa-dollar-sign"></i>
-            <div class="number">${{ number_format($pagos->sum('monto'), 2) }}</div>
-            <div class="label">Total Recaudado</div>
-        </div>
-        <div class="stat-card green">
-            <i class="fas fa-money-bill"></i>
-            <div class="number">${{ number_format($pagos->where('metodo_pago', 'efectivo')->sum('monto'), 2) }}</div>
-            <div class="label">Efectivo</div>
-        </div>
-        <div class="stat-card orange">
-            <i class="fas fa-credit-card"></i>
-            <div class="number">${{ number_format($pagos->where('metodo_pago', 'tarjeta')->sum('monto'), 2) }}</div>
-            <div class="label">Tarjeta</div>
-        </div>
-        <div class="stat-card purple">
-            <i class="fas fa-exchange-alt"></i>
-            <div class="number">${{ number_format($pagos->where('metodo_pago', 'transferencia')->sum('monto'), 2) }}</div>
-            <div class="label">Transferencia</div>
-        </div>
-    </div>
+        <div class="cash-stats-grid">
+            <div class="cash-stat-card border-glow-blue">
+                <div class="stat-icon-box icon-blue"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">${{ number_format($pagos->sum('monto'), 2) }}</div>
+                    <div class="stat-label">Total Recaudado</div>
+                </div>
+            </div>
+            
+            <div class="cash-stat-card border-glow-teal">
+                <div class="stat-icon-box icon-teal"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">${{ number_format($pagos->where('metodo_pago', 'efectivo')->sum('monto'), 2) }}</div>
+                    <div class="stat-label">Flujo Efectivo</div>
+                </div>
+            </div>
+            
+            <div class="cash-stat-card border-glow-orange">
+                <div class="stat-icon-box icon-orange"><i class="fas fa-credit-card"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">${{ number_format($pagos->where('metodo_pago', 'tarjeta')->sum('monto'), 2) }}</div>
+                    <div class="stat-label">Terminal Tarjeta</div>
+                </div>
+            </div>
 
-    <div class="data-table">
-        <h3 style="padding: 1rem; margin: 0;"><i class="fas fa-history"></i> Historial de Transacciones</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Concepto</th>
-                    <th>Monto</th>
-                    <th>Método</th>
-                    <th>Usuario</th>
-                    <th>Fecha</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($pagos as $pago)
-                <tr>
-                    <td>#{{ $pago->id }}</td>
-                    <td>
-                        <span class="badge {{ $pago->concepto == 'alquiler' ? 'badge-success' : 'badge-warning' }}">
-                            {{ $pago->concepto == 'alquiler' ? '📀 Alquiler' : '⚠️ Multa' }}
-                        </span>
-                    </td>
-                    <td class="text-success">${{ number_format($pago->monto, 2) }}</td>
-                    <td>
-                        @if($pago->metodo_pago == 'efectivo')
-                            <span class="payment-cash">💵 Efectivo</span>
-                        @elseif($pago->metodo_pago == 'tarjeta')
-                            <span class="payment-card">💳 Tarjeta</span>
-                        @else
-                            <span class="payment-transfer">🏦 Transferencia</span>
-                        @endif
-                    </td>
-                    <td>{{ $pago->usuario->name }}</td>
-                    <td>{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y H:i') }}</td>
-                    <td><span class="status-completed"><i class="fas fa-check-circle"></i> Pagado</span></td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-        <div class="pagination">
-            {{ $pagos->links() }}
+            <div class="cash-stat-card border-glow-purple">
+                <div class="stat-icon-box icon-purple"><i class="fas fa-exchange-alt"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">${{ number_format($pagos->where('metodo_pago', 'transferencia')->sum('monto'), 2) }}</div>
+                    <div class="stat-label">Transferencias</div>
+                </div>
+            </div>
         </div>
+
+        <div class="premium-table-wrapper">
+            <div class="table-premium-header">
+                <h3><i class="fas fa-history"></i> Historial General de Transacciones</h3>
+            </div>
+            
+            <table class="premium-data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Concepto</th>
+                        <th>Monto Procesado</th>
+                        <th>Método de Pago</th>
+                        <th>Usuario / Cliente</th>
+                        <th>Fecha de Registro</th>
+                        <th style="text-align: center;">Estado Auditoría</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pagos as $pago)
+                    <tr>
+                        <td class="td-id">#{{ str_pad($pago->id, 5, '0', STR_PAD_LEFT) }}</td>
+                        <td>
+                            @if($pago->concepto == 'alquiler')
+                                <span class="badge-concept-pill concept-pill-success">📀 Alquiler</span>
+                            @else
+                                <span class="badge-concept-pill concept-pill-warning">⚠️ Multa</span>
+                            @endif
+                        </td>
+                        <td class="td-amount-green">${{ number_format($pago->monto, 2) }}</td>
+                        <td class="td-method-type">
+                            @if($pago->metodo_pago == 'efectivo')
+                                <span class="payment-badge-text text-teal">💵 Efectivo</span>
+                            @elseif($pago->metodo_pago == 'tarjeta')
+                                <span class="payment-badge-text text-blue">💳 Tarjeta</span>
+                            @else
+                                <span class="payment-badge-text text-purple"> 🏦 Transferencia</span>
+                            @endif
+                        </td>
+                        <td class="td-username"><strong>{{ $pago->usuario->name }}</strong></td>
+                        <td class="td-date">{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y H:i') }}</td>
+                        <td class="td-status-completed">
+                            <div class="status-inner-box">
+                                <span class="status-dot-active"></span>
+                                <span>Pagado</span>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+            
+            @if($pagos->hasPages())
+                <div class="premium-pagination-box">
+                    {{ $pagos->links() }}
+                </div>
+            @endif
+        </div>
+
     </div>
 </div>
 
 <style>
-.page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    color: white;
-}
-.header-buttons {
-    display: flex;
-    gap: 1rem;
-}
-.stats-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-}
-.stat-card {
-    background: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-.stat-card:hover { transform: translateY(-5px); }
-.stat-card.blue { border-bottom: 4px solid #2196f3; }
-.stat-card.green { border-bottom: 4px solid #4caf50; }
-.stat-card.orange { border-bottom: 4px solid #ff9800; }
-.stat-card.purple { border-bottom: 4px solid #9c27b0; }
-.stat-card i { font-size: 2rem; margin-bottom: 0.5rem; }
-.stat-card .number { font-size: 2rem; font-weight: bold; }
-.stat-card .label { color: #666; }
-.data-table { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-table { width: 100%; border-collapse: collapse; }
-th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #eee; }
-th { background: #667eea; color: white; }
-tr:hover { background: #f5f5f5; }
-.badge-success { background: #4caf50; color: white; padding: 0.2rem 0.5rem; border-radius: 5px; }
-.badge-warning { background: #ff9800; color: white; padding: 0.2rem 0.5rem; border-radius: 5px; }
-.payment-cash { color: #4caf50; font-weight: bold; }
-.payment-card { color: #2196f3; font-weight: bold; }
-.payment-transfer { color: #9c27b0; font-weight: bold; }
-.text-success { color: #4caf50; font-weight: bold; }
-.status-completed { color: #4caf50; }
-.btn-primary { background: #667eea; color: white; padding: 0.5rem 1rem; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; }
-.pagination { padding: 1rem; text-align: center; }
+    .cash-history-wrapper {
+        background-color: #0f1115;
+        min-height: 100vh;
+        margin-top: -2rem; /* Sincroniza con app.blade.php */
+        padding: 3rem 0 5rem 0;
+        color: #ffffff;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .cash-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        gap: 1.5rem;
+    }
+
+    .cash-main-title {
+        font-size: 2.6rem;
+        font-weight: 800;
+        margin: 0 0 0.4rem 0;
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .cash-main-title i {
+        color: #ff4b2b;
+        -webkit-text-fill-color: initial;
+        margin-right: 12px;
+    }
+
+    .cash-main-subtitle {
+        color: #6c757d;
+        font-size: 0.98rem;
+        margin: 0;
+    }
+
+    .btn-summary-link {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: #ffffff !important;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .btn-summary-link:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
+    }
+
+    /* REJILLA DE TARJETAS DE MÉTRICAS ANALÍTICAS (STATS) */
+    .cash-stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+        gap: 1.5rem !important;
+        margin-bottom: 3rem;
+        width: 100%;
+    }
+
+    .cash-stat-card {
+        background-color: #1a1d24;
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .border-glow-blue { border-left: 4px solid #2196f3; }
+    .border-glow-teal { border-left: 4px solid #2ec4b6; }
+    .border-glow-orange { border-left: 4px solid #ff9f43; }
+    .border-glow-purple { border-left: 4px solid #9c27b0; }
+
+    .stat-icon-box {
+        width: 48px;
+        height: 48px;
+        background-color: #111317;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .icon-blue { color: #2196f3; }
+    .icon-teal { color: #2ec4b6; }
+    .icon-orange { color: #ff9f43; }
+    .icon-purple { color: #9c27b0; }
+
+    .stat-info { display: flex; flex-direction: column; }
+    .stat-number { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0; }
+    .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
+
+    /* CONTENEDOR DE LA DATA-TABLE */
+    .premium-table-wrapper {
+        background-color: #1a1d24;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .table-premium-header {
+        padding: 1.25rem 1.5rem;
+        background-color: #121419;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .table-premium-header h3 {
+        margin: 0; color: #ffffff; font-size: 1.1rem; font-weight: 700;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    .table-premium-header h3 i { color: #ff4b2b; }
+
+    .premium-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .premium-data-table th {
+        background: linear-gradient(135deg, #1f232b 0%, #14161c 100%);
+        color: #ffffff;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .premium-data-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        color: #b3b3b3;
+        font-size: 0.95rem;
+        vertical-align: middle;
+        background-color: #1a1d24 !important; /* Blindaje de fondo */
+    }
+
+    /* Resaltado de fila en hover */
+    .premium-data-table tbody tr:hover td {
+        background-color: #222731 !important;
+        color: #ffffff !important;
+        cursor: pointer;
+    }
+
+    /* BLINDAJE INTEGRAL CONTRA COLAPSO Y LÍNEAS BLANCAS EN LA ÚLTIMA COLUMNA */
+    .premium-data-table th:last-child,
+    .premium-data-table td:last-child {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+        background-color: #1a1d24 !important;
+        box-shadow: none !important;
+    }
+
+    .premium-data-table tbody tr:hover td:last-child {
+        background-color: #222731 !important;
+        box-shadow: none !important;
+    }
+
+    .td-id { font-family: monospace; color: #ff4b2b !important; font-weight: 600; }
+    .td-amount-green { color: #2ec4b6 !important; font-weight: 700; font-family: monospace; }
+    .td-username { color: #ffffff; }
+    .td-date { color: #8a8a8a; font-size: 0.9rem; font-family: monospace; }
+
+    /* Conceptos Badges */
+    .badge-concept-pill {
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        text-transform: uppercase;
+    }
+    .concept-pill-success { background-color: rgba(46, 196, 182, 0.12); color: #2ec4b6; }
+    .concept-pill-warning { background-color: rgba(255, 152, 0, 0.12); color: #ffb74d; }
+
+    /* Textos colorizados por método de pago */
+    .payment-badge-text { font-weight: 600; font-size: 0.92rem; }
+    .text-teal { color: #2ec4b6; }
+    .text-blue { color: #2196f3; }
+    .text-purple { color: #b57cff; }
+
+    /* Estado de Pago Exitoso */
+    .td-status-completed { text-align: center; }
+    
+    .status-inner-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #2ec4b6;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .status-dot-active {
+        width: 6px;
+        height: 6px;
+        background-color: #2ec4b6;
+        border-radius: 50%;
+    }
+
+    /* ==========================================================================
+       🔥 ULTRA-FIX CONTRA PAGINACIÓN APILADA EN INGLÉS (TAILWIND OVERRIDE)
+       ========================================================================== */
+    .premium-pagination-box {
+        padding: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background-color: #1a1d24 !important;
+        width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Ocultar por completo textos en inglés redundantes de Tailwind */
+    .premium-pagination-box div:first-child,
+    .premium-pagination-box p,
+    .premium-pagination-box .text-sm,
+    .premium-pagination-box .hidden {
+        display: none !important;
+    }
+
+    /* Alinear en fila horizontal limpia */
+    .premium-pagination-box div:last-child,
+    .premium-pagination-box nav,
+    .premium-pagination-box flex,
+    .premium-pagination-box .flex {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    /* Formato de botones numéricos */
+    .premium-pagination-box a,
+    .premium-pagination-box span {
+        background-color: #111317 !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #b3b3b3 !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        margin: 0 !important;
+    }
+
+    .premium-pagination-box a:hover {
+        background-color: #222731 !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    /* Gradiente en la página activa actual */
+    .premium-pagination-box span[aria-current="page"],
+    .premium-pagination-box .bg-blue-600 {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+
+    .premium-pagination-box span[aria-disabled="true"] {
+        background-color: rgba(255, 255, 255, 0.01) !important;
+        color: #3a404a !important;
+        border-color: rgba(255, 255, 255, 0.02) !important;
+        pointer-events: none !important;
+    }
+
+    .premium-pagination-box svg {
+        width: 16px !important;
+        height: 16px !important;
+        fill: currentColor !important;
+    }
+
+    @media (max-width: 768px) {
+        .cash-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .btn-summary-link { width: 100%; justify-content: center; }
+    }
 </style>
 @endsection

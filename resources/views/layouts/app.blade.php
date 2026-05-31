@@ -9,25 +9,26 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="app">
-        <!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
-        <nav class="navbar">
-            <div class="container">
+    <div class="app-layout">
+        
+        <nav class="navbar-premium">
+            <div class="navbar-container">
+                
                 <div class="navbar-brand">
                     @auth
                         @if(auth()->user()->rol === 'admin')
-                            <a href="{{ route('admin.dashboard') }}" style="color: #ffd700; text-decoration: none;">
+                            <a href="{{ route('admin.dashboard') }}" class="brand-link">
                                 <i class="fas fa-film"></i>
                                 <span>MovieSpace</span>
                             </a>
                         @else
-                            <a href="{{ route('home') }}" style="color: #ffd700; text-decoration: none;">
+                            <a href="{{ route('home') }}" class="brand-link">
                                 <i class="fas fa-film"></i>
                                 <span>MovieSpace</span>
                             </a>
                         @endif
                     @else
-                        <a href="{{ route('home') }}" style="color: #ffd700; text-decoration: none;">
+                        <a href="{{ route('home') }}" class="brand-link">
                             <i class="fas fa-film"></i>
                             <span>MovieSpace</span>
                         </a>
@@ -37,202 +38,297 @@
                 <div class="navbar-menu">
                     @auth
                         @if(auth()->user()->rol === 'admin')
-                            <!-- Admin: SIN Dashboard en el menú, solo el logo lleva al dashboard -->
-                            <a href="{{ route('admin.peliculas.index') }}" class="nav-link">
-                                <i class="fas fa-movie"></i> Catálogo
+                            <a href="{{ route('admin.peliculas.index') }}" class="nav-link {{ request()->routeIs('admin.peliculas.*') ? 'active' : '' }}">
+                                <i class="fas fa-clapperboard"></i> Catálogo
                             </a>
-                            <a href="{{ route('prestamos.index') }}" class="nav-link">
+                            <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
                             </a>
-                            <a href="{{ route('pagos.index') }}" class="nav-link">
+                            <a href="{{ route('pagos.index') }}" class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}">
                                 <i class="fas fa-cash-register"></i> Caja
                             </a>
-                            <a href="{{ route('admin.usuarios.index') }}" class="nav-link">
+                            <a href="{{ route('admin.usuarios.index') }}" class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
                                 <i class="fas fa-users"></i> Usuarios
                             </a>
-                            <a href="{{ route('admin.reportes.index') }}" class="nav-link">
+                            <a href="{{ route('admin.reportes.index') }}" class="nav-link {{ request()->routeIs('admin.reportes.*') ? 'active' : '' }}">
                                 <i class="fas fa-chart-line"></i> Reportes
                             </a>
                         @elseif(auth()->user()->rol === 'trabajador')
-                            <a href="{{ route('peliculas.index') }}" class="nav-link">
-                                <i class="fas fa-movie"></i> Catálogo
+                            <a href="{{ route('peliculas.index') }}" class="nav-link {{ request()->routeIs('peliculas.*') ? 'active' : '' }}">
+                                <i class="fas fa-clapperboard"></i> Catálogo
                             </a>
-                            <a href="{{ route('prestamos.index') }}" class="nav-link">
+                            <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
                             </a>
-                            <a href="{{ route('pagos.index') }}" class="nav-link">
+                            <a href="{{ route('pagos.index') }}" class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}">
                                 <i class="fas fa-cash-register"></i> Caja
                             </a>
                         @else
-                            <a href="{{ route('peliculas.index') }}" class="nav-link">
-                                <i class="fas fa-movie"></i> Catálogo
+                            <a href="{{ route('peliculas.index') }}" class="nav-link {{ request()->routeIs('peliculas.*') ? 'active' : '' }}">
+                                <i class="fas fa-clapperboard"></i> Catálogo
                             </a>
                         @endif
                     @else
-                        <a href="{{ route('peliculas.index') }}" class="nav-link">
-                            <i class="fas fa-movie"></i> Catálogo
+                        <a href="{{ route('peliculas.index') }}" class="nav-link {{ request()->routeIs('peliculas.*') ? 'active' : '' }}">
+                            <i class="fas fa-clapperboard"></i> Catálogo
                         </a>
                     @endauth
                 </div>
                 
-                <div class="navbar-user">
+                <div class="navbar-user-section">
                     @auth
-                        <div class="user-dropdown">
-                            <button class="user-btn">
+                        <div class="user-dropdown-wrapper">
+                            <button class="user-dropdown-toggle" id="userMenuBtn">
                                 <i class="fas fa-user-circle"></i>
-                                {{ auth()->user()->name }}
-                                <i class="fas fa-chevron-down"></i>
+                                <span class="user-name-text">{{ auth()->user()->name }}</span>
+                                <i class="fas fa-chevron-down arrow-icon"></i>
                             </button>
-                            <div class="dropdown-menu">
-                                <a href="{{ route('perfil') }}">
+                            <div class="dropdown-premium-menu" id="userDropdownMenu">
+                                <a href="{{ route('perfil') }}" class="dropdown-item">
                                     <i class="fas fa-id-card"></i> Mi Perfil
                                 </a>
                                 @if(auth()->user()->rol === 'cliente')
-                                    <a href="{{ route('mis-prestamos') }}">
+                                    <a href="{{ route('mis-prestamos') }}" class="dropdown-item">
                                         <i class="fas fa-history"></i> Mis Préstamos
                                     </a>
                                 @endif
+                                <div class="dropdown-divider"></div>
                                 <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
                                     @csrf
-                                    <button type="submit" class="dropdown-logout">
+                                    <button type="submit" class="dropdown-item text-danger-btn">
                                         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                                     </button>
                                 </form>
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="btn-login">Iniciar Sesión</a>
-                        <a href="{{ route('register') }}" class="btn-register">Registrarse</a>
+                        <div class="auth-buttons-group">
+                            <a href="{{ route('login') }}" class="btn-link-login">Iniciar Sesión</a>
+                            <a href="{{ route('register') }}" class="btn-premium-register">Registrarse</a>
+                        </div>
                     @endauth
                 </div>
             </div>
         </nav>
         
-        <!-- Alertas -->
-        @if(session('success'))
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                {{ session('success') }}
-            </div>
-        @endif
+        <div class="toast-notifications-container">
+            @if(session('success'))
+                <div class="toast-alert alert-success-premium">
+                    <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
+                    <div class="toast-content">{{ session('success') }}</div>
+                </div>
+            @endif
+            
+            @if(session('error'))
+                <div class="toast-alert alert-error-premium">
+                    <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
+                    <div class="toast-content">{{ session('error') }}</div>
+                </div>
+            @endif
+        </div>
         
-        @if(session('error'))
-            <div class="alert alert-error">
-                <i class="fas fa-exclamation-circle"></i>
-                {{ session('error') }}
-            </div>
-        @endif
-        
-        <!-- Contenido principal -->
-        <main class="main-content">
+        <main class="main-viewport">
             @yield('content')
         </main>
         
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container">
-                <p>&copy; 2024 MovieSpace - Sistema de Alquiler de Películas</p>
+        <footer class="footer-premium">
+            <div class="footer-container">
+                <p>&copy; {{ date('Y') }} <span class="highlight">MovieSpace</span> - Sistema de Alquiler de Películas. Sucursal Jayaque.</p>
             </div>
         </footer>
     </div>
     
     <style>
-        .navbar {
-            background: rgba(0, 0, 0, 0.95);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        :root {
+            --bg-main: #0f1115;
+            --bg-card: #1a1d24;
+            --primary-gradient: linear-gradient(45deg, #ff416c, #ff4b2b);
+            --text-main: #ffffff;
+            --text-muted: #6c757d;
+            --border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            background-color: #0f1115;
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar Estilo Streaming */
+        .navbar-premium {
+            background-color: rgba(15, 17, 21, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 1000;
+            transition: all 0.3s ease;
         }
-        .navbar .container {
-            max-width: 1200px;
+
+        .navbar-container {
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 1rem 20px;
+            padding: 0.8rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
         }
-        .navbar-brand a {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffd700;
+
+        /* Marca / Logo */
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.6rem;
+            fw-bold: 800;
             text-decoration: none;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
         }
-        .navbar-brand i {
-            color: #ff6b6b;
-            margin-right: 10px;
+
+        .brand-link i {
+            background: var(--primary-gradient);
+            -webkit-background-clip: initial;
+            -webkit-text-fill-color: initial;
+            color: #ff4b2b;
         }
+
+        /* Enlaces del Menú */
         .navbar-menu {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             align-items: center;
-            flex-wrap: wrap;
         }
+
         .nav-link {
-            color: white;
+            color: #b3b3b3;
             text-decoration: none;
-            transition: color 0.3s;
-            padding: 0.5rem;
-        }
-        .nav-link:hover {
-            color: #ffd700;
-        }
-        .nav-link i {
-            margin-right: 5px;
-        }
-        .btn-login, .btn-register {
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        .btn-login {
-            color: white;
-        }
-        .btn-login:hover {
-            color: #ffd700;
-        }
-        .btn-register {
-            background: #ff6b6b;
-            color: white;
-            margin-left: 10px;
-        }
-        .btn-register:hover {
-            background: #ff5252;
-        }
-        .user-dropdown {
-            position: relative;
-        }
-        .user-btn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 0.5rem 1rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        .dropdown-menu {
+
+        .nav-link:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            background-color: rgba(255, 75, 43, 0.15);
+        }
+
+        /* Área de Autenticación */
+        .auth-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-link-login {
+            color: #b3b3b3;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .btn-link-login:hover { color: #fff; }
+
+        .btn-premium-register {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-premium-register:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(255, 65, 108, 0.35);
+        }
+
+        /* Dropdown Control de Usuario */
+        .user-dropdown-wrapper {
+            position: relative;
+        }
+
+        .user-dropdown-toggle {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .user-dropdown-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .user-dropdown-toggle i:first-child {
+            color: #ff4b2b;
+            font-size: 1.1rem;
+        }
+
+        .arrow-icon {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: transform 0.2s;
+        }
+
+        .dropdown-premium-menu {
             position: absolute;
             right: 0;
-            top: 100%;
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            min-width: 200px;
-            display: none;
-            z-index: 1000;
+            top: calc(100% + 8px);
+            background: #16191e;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 210px;
+            display: none; /* Controlado dinámicamente por JS */
+            overflow: hidden;
+            z-index: 1010;
+            animation: dropdownFadeIn 0.2s ease-out;
         }
-        .user-dropdown:hover .dropdown-menu {
-            display: block;
+
+        @keyframes dropdownFadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .dropdown-menu a, .dropdown-logout {
-            display: block;
-            padding: 10px 15px;
-            color: #333;
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 18px;
+            color: #d1d1d1;
             text-decoration: none;
             width: 100%;
             text-align: left;
@@ -240,62 +336,113 @@
             border: none;
             cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
         }
-        .dropdown-menu a:hover, .dropdown-logout:hover {
-            background: #f0f0f0;
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
         }
-        .dropdown-logout {
-            color: #ff6b6b;
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 4px 0;
         }
-        .alert {
+
+        .text-danger-btn { color: #ff5252 !important; }
+        .text-danger-btn:hover { background: rgba(255, 82, 82, 0.08) !important; }
+
+        /* Sistema Inteligente de Toasts / Alertas */
+        .toast-notifications-container {
             position: fixed;
-            top: 80px;
-            right: 20px;
-            padding: 1rem;
-            border-radius: 5px;
-            color: white;
+            top: 90px;
+            right: 25px;
             z-index: 1100;
-            animation: slideIn 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        .alert-success {
-            background: #4caf50;
+
+        .toast-alert {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            border-radius: 10px;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 300px;
+            max-width: 450px;
+            animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .alert-error {
-            background: #f44336;
+
+        @keyframes toastSlideIn {
+            from { transform: translateX(110%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+
+        .alert-success-premium { background: #0ca678; border-left: 5px solid #02b875; }
+        .alert-error-premium { background: #f03e3e; border-left: 5px solid #ff1a1a; }
+        .toast-icon-box { font-size: 1.2rem; }
+
+        /* Contenedor Principal de Vistas */
+        .main-viewport {
+            flex-grow: 1;
+            padding: 0 2rem; /* Agrega 32px de espacio a la izquierda y derecha */
+            background-color: #0f1115; /* Asegura que el contenedor mantenga el color */
+        }
+        
+        @media (min-width: 1200px) {
+            .main-viewport {
+                padding: 0 4rem; 
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
         }
-        .main-content {
-            min-height: calc(100vh - 140px);
-            padding: 2rem 0;
-        }
-        .footer {
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
+
+        /* Footer */
+        .footer-premium {
+            background-color: #0b0c10;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
             text-align: center;
-            padding: 1rem 0;
-            margin-top: 2rem;
+            padding: 1.5rem 0;
+            font-size: 0.88rem;
+            font-weight: 500;
         }
-        @media (max-width: 768px) {
-            .navbar .container {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            .navbar-menu {
-                justify-content: center;
-                gap: 1rem;
-            }
+
+        .footer-premium .highlight { color: #ff4b2b; font-weight: 600; }
+
+        /* Responsivo */
+        @media (max-width: 992px) {
+            .navbar-container { flex-direction: column; gap: 1.2rem; padding: 1.2rem 1rem; }
+            .navbar-menu { justify-content: center; flex-wrap: wrap; gap: 0.8rem; }
         }
     </style>
-    
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('userMenuBtn');
+            const dropMenu = document.getElementById('userDropdownMenu');
+
+            if(toggleBtn && dropMenu) {
+                // Abrir/Cerrar menú al hacer clic en el botón del usuario
+                toggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const isVisible = dropMenu.style.display === 'block';
+                    dropMenu.style.display = isVisible ? 'none' : 'block';
+                });
+
+                // Cerrar el menú si el usuario hace clic en cualquier otra parte de la pantalla
+                document.addEventListener('click', function() {
+                    dropMenu.style.display = 'none';
+                });
+            }
+        });
+    </script>
+
     @stack('scripts')
 </body>
 </html>
