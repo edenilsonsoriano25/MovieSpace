@@ -9,10 +9,11 @@ use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\ClientePrestamoController;
 
 /*
 |--------------------------------------------------------------------------
-| 1. Rutas Públicas (Acceso para Visitantes y Clientes)
+| 1. Rutas Públicas (Visitantes y Clientes sin loguear)
 |--------------------------------------------------------------------------
 */
 
@@ -28,59 +29,60 @@ Route::get('/', function () {
     return app(PeliculaController::class)->index();
 })->name('home');
 
-// Autenticación de Usuarios
+// Autenticación Nativa
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-// Registro de Clientes
+// Registro de Cuentas
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
-// Catálogo y Buscador
+// Consultas del Catálogo
 Route::get('/peliculas', [PeliculaController::class, 'index'])->name('peliculas.index');
 Route::get('/buscar-peliculas', [PeliculaController::class, 'search'])->name('peliculas.search');
 
 
 /*
 |--------------------------------------------------------------------------
-| 2. Rutas Protegidas Generales (Cualquier usuario logueado)
+| 2. Zona Exclusiva del Cliente (¡Priorizada arriba para evitar colisiones!)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
-    // Configuración de Perfil
+
+    // Configuración de Perfil (General)
     Route::get('/perfil', [ProfileController::class, 'edit'])->name('perfil');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('perfil.update');
 
-    // Rutas de visualización y apartado/alquiler del cliente (¡Restauradas!)
-    Route::get('/mis-prestamos', [PrestamoController::class, 'misPrestamos'])->name('mis-prestamos');
-    Route::get('/alquilar/{pelicula}', [PrestamoController::class, 'alquilar'])->name('alquilar');
-    Route::post('/prestamos/cliente/store', [PrestamoController::class, 'clienteStore'])->name('prestamos.cliente.store');
+    // Módulo del Cliente mapeado al ClientePrestamoController de forma independiente
+    Route::get('/historial-alquileres', [ClientePrestamoController::class, 'misPrestamos'])->name('mis-prestamos');
+    Route::get('/alquilar/{pelicula}', [ClientePrestamoController::class, 'alquilar'])->name('alquilar');
+    Route::post('/prestamos/cliente/store', [ClientePrestamoController::class, 'clienteStore'])->name('prestamos.cliente.store');
 });
 
 
 /*
 |--------------------------------------------------------------------------
-| 3. Rutas Operativas (Bloqueado para Clientes - Solo Admin y Trabajador)
+| 3. Rutas Operativas (Solo Trabajadores y Administradores)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
 
-    // Este grupo valida el rol y saca a los clientes de las páginas de gestión
+    // Este filtro saca a los clientes si intentan usar el panel de control de mostrador
     Route::group(['middleware' => function ($request, $next) {
         if (auth()->user()->rol === 'cliente') {
-            return redirect()->route('peliculas.index')->with('error', 'No tienes permisos operativos.');
+            return redirect()->route('mis-prestamos')->with('error', 'No tienes permisos para acceder a las funciones de personal.');
         }
         return $next($request);
     }], function () {
 
-        // Gestión de Alquileres y Devoluciones en Sucursal
+        // Gestión de alquileres físicos en sucursal Jayaque
         Route::get('/prestamos', [PrestamoController::class, 'index'])->name('prestamos.index');
         Route::get('/prestamos/create', [PrestamoController::class, 'create'])->name('prestamos.create');
         Route::post('/prestamos', [PrestamoController::class, 'store'])->name('prestamos.store');
         Route::post('/prestamos/{prestamo}/devolucion', [PrestamoController::class, 'devolucion'])->name('prestamos.devolucion');
 
-        // Control de Auditoría de Cajas y Pagos
+        // Auditoría de Dinero y Finanzas
         Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
         Route::get('/caja', [PagoController::class, 'caja'])->name('caja.index');
     });
@@ -89,16 +91,15 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 4. Rutas Exclusivas del Administrador (Bloqueado para Clientes y Trabajadores)
+| 4. Zona de Control del Administrador (Nivel Maestro)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
 
-    // Este grupo valida estrictamente que sea 'admin' para entrar
     Route::group([
         'middleware' => function ($request, $next) {
             if (auth()->user()->rol !== 'admin') {
-                return redirect()->route('home')->with('error', 'Acceso denegado. Se requieren permisos de administrador.');
+                return redirect()->route('home')->with('error', 'Zona denegada. Se requieren credenciales de Administrador.');
             }
             return $next($request);
         },
@@ -106,20 +107,20 @@ Route::middleware(['auth'])->group(function () {
         'as' => 'admin.'
     ], function () {
 
-        // Dashboard Principal
+        // Dashboard Gerencial
         Route::get('/dashboard', function () {
             return view('admin.dashboard');
         })->name('dashboard');
 
-        // Módulo de Gestión de Usuarios y Personal
+        // Control de Personal y Cuentas
         Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
         Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
 
-        // Reportes Financieros en PDF
+        // Reportes Ejecutivos PDF
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
 
-        // CRUD de Inventario del Catálogo de Películas
+        // CRUD del Catálogo Multimedia
         Route::get('/peliculas', [PeliculaController::class, 'adminIndex'])->name('peliculas.index');
         Route::get('/peliculas/create', [PeliculaController::class, 'create'])->name('peliculas.create');
         Route::post('/peliculas', [PeliculaController::class, 'store'])->name('peliculas.store');

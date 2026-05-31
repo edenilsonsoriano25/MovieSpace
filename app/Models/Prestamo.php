@@ -9,9 +9,9 @@ use Carbon\Carbon;
 class Prestamo extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'prestamos';
-    
+
     protected $fillable = [
         'id_usuario',
         'id_trabajador',
@@ -21,64 +21,46 @@ class Prestamo extends Model
         'estado_prestamo',
         'multa_total'
     ];
-    
+
     protected $casts = [
         'fecha_salida' => 'date',
         'fecha_limite' => 'date',
         'fecha_entrega_real' => 'date',
     ];
-    
-    // Relación con usuario (cliente)
+
+    // Relación con el usuario (Cliente que alquila la película)
     public function usuario()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         return $this->belongsTo(User::class, 'id_usuario');
     }
-    
-    // Relación con trabajador
+
+    // Relación con el trabajador (Personal operativo que entregó el CD)
     public function trabajador()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         return $this->belongsTo(User::class, 'id_trabajador');
     }
-    
-    // Relación con detalles
+
+    // Relación con los detalles del arriendo
     public function detalles()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         return $this->hasMany(DetallePrestamo::class, 'id_prestamo');
     }
-    
-    // Relación con pagos
+
+    // Relación con el historial de pagos de la orden
     public function pagos()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         return $this->hasMany(Pago::class, 'id_prestamo');
     }
-    
-    // Verificar si está retrasado
+
+    // Verificar si el arriendo está retrasado
     public function estaRetrasado()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         return $this->estado_prestamo === 'activo' && Carbon::now()->gt($this->fecha_limite);
     }
-    
-    // Calcular días de retraso
+
+    // Calcular días de retraso acumulados
     public function diasRetraso()
     {
-         if (auth()->user()->rol === 'cliente') {
-        abort(403, 'No tienes permiso para acceder a esta sección.');
-    }
         if (!$this->estaRetrasado()) {
             return 0;
         }
