@@ -5,26 +5,30 @@
 @section('content')
 <div class="catalog-dark-wrapper">
     <div class="container-fluid px-4 px-md-5">
-        
+
         <div class="catalog-header">
             <h1 class="catalog-title">
                 <i class="fas fa-film"></i> Catálogo de Películas
             </h1>
             <p class="catalog-subtitle">Busca tus títulos favoritos y verifica la disponibilidad de copias físicas en nuestra sucursal de Santa Tecla.</p>
-            
+
             <div class="search-box-container">
                 <span class="search-icon"><i class="fas fa-search"></i></span>
                 <input type="text" id="search" placeholder="🔍 Buscar películas por título, género o director..." onkeyup="buscarPeliculas()">
             </div>
         </div>
-        
+
         <div id="movies-container">
             <div class="movies-streaming-grid">
                 @foreach($peliculas as $pelicula)
                 <div class="movie-premium-card">
-                    
+
                     <div class="movie-premium-poster">
+                        @if($pelicula->portada)
+                        <img src="{{ $pelicula->portada }}" alt="Portada de {{ $pelicula->titulo }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 14px 14px 0 0;">
+                        @else
                         <i class="fas fa-video"></i>
+                        @endif
                         <span class="movie-premium-price">${{ number_format($pelicula->precio_alquiler, 2) }}</span>
                     </div>
 
@@ -35,28 +39,28 @@
                         <h3 class="movie-premium-title" title="{{ $pelicula->titulo }}">
                             {{ $pelicula->titulo }}
                         </h3>
-                        
+
                         <div class="movie-premium-stock-box">
                             @if($pelicula->copias_en_estante > 0)
-                                <span class="stock-dot dot-available"></span>
-                                <span class="stock-text text-available"><i class="fas fa-check"></i> {{ $pelicula->copias_en_estante }} disponibles</span>
+                            <span class="stock-dot dot-available"></span>
+                            <span class="stock-text text-available"><i class="fas fa-check"></i> {{ $pelicula->copias_en_estante }} disponibles</span>
                             @else
-                                <span class="stock-dot dot-out"></span>
-                                <span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>
+                            <span class="stock-dot dot-out"></span>
+                            <span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>
                             @endif
                         </div>
 
                         <div class="movie-premium-actions">
                             @auth
-                                @if(auth()->user()->rol === 'cliente')
-                                    <a href="{{ route('alquilar', $pelicula) }}" class="btn-premium-action btn-rent {{ $pelicula->copias_en_estante == 0 ? 'disabled-action' : '' }}">
-                                        <i class="fas fa-shopping-cart"></i> Alquilar
-                                    </a>
-                                @endif
+                            @if(auth()->user()->rol === 'cliente')
+                            <a href="{{ route('alquilar', $pelicula) }}" class="btn-premium-action btn-rent {{ $pelicula->copias_en_estante == 0 ? 'disabled-action' : '' }}">
+                                <i class="fas fa-shopping-cart"></i> Reservar
+                            </a>
+                            @endif
                             @else
-                                <a href="{{ route('login') }}" class="btn-premium-action btn-guest">
-                                    <i class="fas fa-sign-in-alt"></i> Inicia sesión para alquilar
-                                </a>
+                            <a href="{{ route('login') }}" class="btn-premium-action btn-guest">
+                                <i class="fas fa-sign-in-alt"></i> Iniciar Sesión para Reservar
+                            </a>
                             @endauth
                         </div>
                     </div>
@@ -72,12 +76,13 @@
     .catalog-dark-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Cancela márgenes del layout base anterior */
+        margin-top: -2rem;
+        /* Cancela márgenes del layout base anterior */
         padding: 3rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
-    
+
     .catalog-header {
         text-align: center;
         margin-bottom: 4rem;
@@ -156,10 +161,10 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
         position: relative;
-        border: 1px solid rgba(255,255,255,0.03);
+        border: 1px solid rgba(255, 255, 255, 0.03);
     }
 
     .movie-premium-card:hover {
@@ -193,7 +198,7 @@
         font-size: 0.85rem;
         font-weight: 700;
         border-radius: 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     .movie-premium-body {
@@ -238,16 +243,26 @@
         margin-right: 8px;
     }
 
-    .dot-available { background-color: #2ec4b6; }
-    .dot-out { background-color: #e63946; }
+    .dot-available {
+        background-color: #2ec4b6;
+    }
+
+    .dot-out {
+        background-color: #e63946;
+    }
 
     .stock-text {
         font-size: 0.85rem;
         font-weight: 600;
     }
 
-    .text-available { color: #2ec4b6; }
-    .text-out { color: #e63946; }
+    .text-available {
+        color: #2ec4b6;
+    }
+
+    .text-out {
+        color: #e63946;
+    }
 
     /* Botones dinámicos */
     .btn-premium-action {
@@ -293,54 +308,58 @@
 
 @push('scripts')
 <script>
-// Sincronizar estados Blade a variables globales de JavaScript para el buscador
-const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-const userRole = "{{ auth()->check() ? auth()->user()->rol : '' }}";
+    // Sincronizar estados Blade a variables globales de JavaScript para el buscador
+    const isAuthenticated = {
+        {
+            auth() - > check() ? 'true' : 'false'
+        }
+    };
+    const userRole = "{{ auth()->check() ? auth()->user()->rol : '' }}";
 
-function buscarPeliculas() {
-    let query = document.getElementById('search').value;
-    
-    fetch(`/buscar-peliculas?search=${query}`)
-        .then(response => response.json())
-        .then(data => {
-            let container = document.getElementById('movies-container');
-            container.innerHTML = '';
-            
-            if(data.length === 0) {
-                container.innerHTML = `
+    function buscarPeliculas() {
+        let query = document.getElementById('search').value;
+
+        fetch(`/buscar-peliculas?search=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                let container = document.getElementById('movies-container');
+                container.innerHTML = '';
+
+                if (data.length === 0) {
+                    container.innerHTML = `
                     <div style="text-align: center; padding: 5rem 0; width: 100%; grid-column: 1 / -1;">
                         <i class="fas fa-search fa-3x" style="color: #3a3f4d; margin-bottom: 1.5rem; display:block;"></i>
                         <p style="color: #6c757d; font-size: 1.1rem;">No se encontraron películas coincidentes.</p>
                     </div>`;
-                return;
-            }
-            
-            let html = '<div class="movies-streaming-grid">';
-            
-            data.forEach(pelicula => {
-                let precio = parseFloat(pelicula.precio_alquiler).toFixed(2);
-                
-                let stockHTML = pelicula.copias_en_estante > 0 
-                    ? `<span class="stock-dot dot-available"></span><span class="stock-text text-available"><i class="fas fa-check"></i> ${pelicula.copias_en_estante} disponibles</span>`
-                    : `<span class="stock-dot dot-out"></span><span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>`;
-                
-                let botonHTML = '';
-                if (isAuthenticated) {
-                    if (userRole === 'cliente') {
-                        let disabledStyle = pelicula.copias_en_estante == 0 ? 'disabled-action' : '';
-                        botonHTML = `
+                    return;
+                }
+
+                let html = '<div class="movies-streaming-grid">';
+
+                data.forEach(pelicula => {
+                    let precio = parseFloat(pelicula.precio_alquiler).toFixed(2);
+
+                    let stockHTML = pelicula.copias_en_estante > 0 ?
+                        `<span class="stock-dot dot-available"></span><span class="stock-text text-available"><i class="fas fa-check"></i> ${pelicula.copias_en_estante} disponibles</span>` :
+                        `<span class="stock-dot dot-out"></span><span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>`;
+
+                    let botonHTML = '';
+                    if (isAuthenticated) {
+                        if (userRole === 'cliente') {
+                            let disabledStyle = pelicula.copias_en_estante == 0 ? 'disabled-action' : '';
+                            botonHTML = `
                             <a href="/alquilar/${pelicula.id}" class="btn-premium-action btn-rent ${disabledStyle}">
                                 <i class="fas fa-shopping-cart"></i> Alquilar
                             </a>`;
-                    }
-                } else {
-                    botonHTML = `
+                        }
+                    } else {
+                        botonHTML = `
                         <a href="/login" class="btn-premium-action btn-guest">
                             <i class="fas fa-sign-in-alt"></i> Inicia sesión para alquilar
                         </a>`;
-                }
+                    }
 
-                html += `
+                    html += `
                     <div class="movie-premium-card">
                         <div class="movie-premium-poster">
                             <i class="fas fa-video"></i>
@@ -362,11 +381,11 @@ function buscarPeliculas() {
                         </div>
                     </div>
                 `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
             });
-            
-            html += '</div>';
-            container.innerHTML = html;
-        });
-}
+    }
 </script>
 @endpush

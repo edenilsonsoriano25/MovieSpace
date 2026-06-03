@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="landing-premium-wrapper">
-    
+
     <div class="hero-premium-banner">
         <div class="hero-overlay-glow"></div>
         <div class="hero-premium-content">
@@ -16,12 +16,12 @@
                     <span>Explorar Catálogo</span> <i class="fas fa-play"></i>
                 </a>
                 @guest
-                    <a href="{{ route('register') }}" class="btn-hero-secondary">Crear Cuenta Gratis</a>
+                <a href="{{ route('register') }}" class="btn-hero-secondary">Crear Cuenta Gratis</a>
                 @endguest
             </div>
         </div>
     </div>
-    
+
     <div class="container-fluid px-4 px-md-5">
         <div class="section-title-wrapper">
             <h2 class="landing-section-title">
@@ -30,7 +30,7 @@
             </h2>
             <p class="section-subtitle-text">Los títulos más solicitados y con mayor disponibilidad de copias físicas en mostrador hoy.</p>
         </div>
-        
+
         <div class="movies-streaming-grid">
             @forelse($destacadas as $pelicula)
             <div class="movie-premium-card">
@@ -39,16 +39,16 @@
                     <i class="fas fa-clapperboard poster-fallback-icon"></i>
                     <span class="movie-badge-genre"><i class="fas fa-ticket"></i> {{ $pelicula->genero }}</span>
                 </div>
-                
+
                 <div class="movie-premium-info">
                     <h3 class="movie-premium-title" title="{{ $pelicula->titulo }}">{{ $pelicula->titulo }}</h3>
-                    
+
                     <div class="movie-metrics-footer">
                         <div class="movie-rent-rate">
                             <span class="rate-label">ALQUILER</span>
                             <span class="rate-value">${{ number_format($pelicula->precio_alquiler, 2) }}</span>
                         </div>
-                        
+
                         <a href="{{ route('peliculas.index') }}" class="btn-card-details">
                             <i class="fas fa-circle-info"></i> Detalle
                         </a>
@@ -70,7 +70,8 @@
     .landing-premium-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con el padding de app.blade.php */
+        margin-top: -2rem;
+        /* Sincroniza con el padding de app.blade.php */
         padding-bottom: 5rem;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -90,7 +91,10 @@
     /* Resplandor trasero de ambiente multimedia (Efecto Cine) */
     .hero-overlay-glow {
         position: absolute;
-        top: 50%; left: 50%; width: 600px; height: 300px;
+        top: 50%;
+        left: 50%;
+        width: 600px;
+        height: 300px;
         background: radial-gradient(circle, rgba(255, 65, 108, 0.08) 0%, transparent 70%);
         transform: translate(-50%, -50%);
         z-index: 1;
@@ -245,7 +249,10 @@
 
     .movie-gradient-shading {
         position: absolute;
-        bottom: 0; left: 0; width: 100%; height: 50%;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 50%;
         background: linear-gradient(to top, rgba(26, 29, 36, 0.9), transparent);
         z-index: 1;
     }
@@ -263,7 +270,8 @@
 
     .movie-badge-genre {
         position: absolute;
-        top: 14px; left: 14px;
+        top: 14px;
+        left: 14px;
         background-color: rgba(15, 17, 21, 0.85);
         backdrop-filter: blur(4px);
         -webkit-backdrop-filter: blur(4px);
@@ -273,7 +281,7 @@
         padding: 4px 10px;
         border-radius: 6px;
         z-index: 2;
-        border: 1px solid rgba(255,255,255,0.03);
+        border: 1px solid rgba(255, 255, 255, 0.03);
     }
 
     /* Información de la Tarjeta Inferior */
@@ -352,16 +360,35 @@
         padding: 4rem 2rem;
         text-align: center;
         color: #495057;
-        border: 1px solid rgba(255,255,255,0.02);
+        border: 1px solid rgba(255, 255, 255, 0.02);
     }
 
-    .catalog-empty-state-box i { font-size: 3rem; margin-bottom: 1rem; color: #323742; }
-    .catalog-empty-state-box p { font-size: 1.1rem; font-weight: 600; margin: 0 0 1.5rem 0; color: #6c757d; }
+    .catalog-empty-state-box i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #323742;
+    }
+
+    .catalog-empty-state-box p {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 1.5rem 0;
+        color: #6c757d;
+    }
 
     @media (max-width: 576px) {
-        .hero-main-title { font-size: 2.2rem; }
-        .hero-premium-banner { padding: 5rem 1rem; margin-bottom: 2.5rem; }
-        .movies-streaming-grid { grid-template-columns: 1fr !important; }
+        .hero-main-title {
+            font-size: 2.2rem;
+        }
+
+        .hero-premium-banner {
+            padding: 5rem 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .movies-streaming-grid {
+            grid-template-columns: 1fr !important;
+        }
     }
 </style>
 @endsection
