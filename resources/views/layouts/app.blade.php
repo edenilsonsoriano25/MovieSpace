@@ -44,7 +44,6 @@
                             <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
                             </a>
-                            <!-- 👈 NUEVO: Enlace a Solicitudes con badge -->
                             <a href="{{ route('solicitudes.pendientes') }}" class="nav-link {{ request()->routeIs('solicitudes.*') ? 'active' : '' }}">
                                 <i class="fas fa-paper-plane"></i> Solicitudes
                                 @php
@@ -70,7 +69,6 @@
                             <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
                             </a>
-                            <!-- 👈 NUEVO: Enlace a Solicitudes con badge para trabajador -->
                             <a href="{{ route('solicitudes.pendientes') }}" class="nav-link {{ request()->routeIs('solicitudes.*') ? 'active' : '' }}">
                                 <i class="fas fa-paper-plane"></i> Solicitudes
                                 @php
@@ -131,16 +129,19 @@
             </div>
         </nav>
         
-        <div class="toast-notifications-container">
+        <!-- ========================================================= -->
+        <!-- ALERTAS GLOBALES - SOLO AQUÍ, NO EN NINGUNA OTRA VISTA -->
+        <!-- ========================================================= -->
+        <div class="toast-notifications-container" id="global-toast-container">
             @if(session('success'))
-                <div class="toast-alert alert-success-premium">
+                <div class="toast-alert alert-success-premium toast-auto-hide">
                     <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
                     <div class="toast-content">{{ session('success') }}</div>
                 </div>
             @endif
             
             @if(session('error'))
-                <div class="toast-alert alert-error-premium">
+                <div class="toast-alert alert-error-premium toast-auto-hide">
                     <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
                     <div class="toast-content">{{ session('error') }}</div>
                 </div>
@@ -182,7 +183,6 @@
             min-height: 100vh;
         }
 
-        /* Navbar Estilo Streaming */
         .navbar-premium {
             background-color: rgba(15, 17, 21, 0.95);
             backdrop-filter: blur(10px);
@@ -203,7 +203,6 @@
             align-items: center;
         }
 
-        /* Marca / Logo */
         .brand-link {
             display: flex;
             align-items: center;
@@ -223,7 +222,6 @@
             color: #ff4b2b;
         }
 
-        /* Enlaces del Menú */
         .navbar-menu {
             display: flex;
             gap: 1.5rem;
@@ -255,7 +253,6 @@
             background-color: rgba(255, 75, 43, 0.15);
         }
 
-        /* 👈 NUEVO: Estilos para el badge de solicitudes */
         .badge-solicitudes {
             background: linear-gradient(45deg, #ff416c, #ff4b2b);
             color: white;
@@ -272,21 +269,11 @@
         }
 
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.9;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.9; }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        /* Área de Autenticación */
         .auth-buttons-group {
             display: flex;
             align-items: center;
@@ -320,7 +307,6 @@
             box-shadow: 0 6px 20px rgba(255, 65, 108, 0.35);
         }
 
-        /* Dropdown Control de Usuario */
         .user-dropdown-wrapper {
             position: relative;
         }
@@ -406,7 +392,6 @@
         .text-danger-btn { color: #ff5252 !important; }
         .text-danger-btn:hover { background: rgba(255, 82, 82, 0.08) !important; }
 
-        /* Sistema Inteligente de Toasts / Alertas */
         .toast-notifications-container {
             position: fixed;
             top: 90px;
@@ -441,7 +426,6 @@
         .alert-error-premium { background: #f03e3e; border-left: 5px solid #ff1a1a; }
         .toast-icon-box { font-size: 1.2rem; }
 
-        /* Contenedor Principal de Vistas */
         .main-viewport {
             flex-grow: 1;
             padding: 0 2rem;
@@ -454,7 +438,6 @@
             }
         }
 
-        /* Footer */
         .footer-premium {
             background-color: #0b0c10;
             border-top: 1px solid var(--border-color);
@@ -467,7 +450,6 @@
 
         .footer-premium .highlight { color: #ff4b2b; font-weight: 600; }
 
-        /* Responsivo */
         @media (max-width: 992px) {
             .navbar-container { flex-direction: column; gap: 1.2rem; padding: 1.2rem 1rem; }
             .navbar-menu { justify-content: center; flex-wrap: wrap; gap: 0.8rem; }
@@ -476,6 +458,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Dropdown del usuario
             const toggleBtn = document.getElementById('userMenuBtn');
             const dropMenu = document.getElementById('userDropdownMenu');
 
@@ -490,6 +473,18 @@
                     dropMenu.style.display = 'none';
                 });
             }
+
+            // Auto-desvanecer alertas globales después de 4 segundos
+            setTimeout(function() {
+                let alerts = document.querySelectorAll('.toast-auto-hide');
+                alerts.forEach(function(alert) {
+                    alert.style.transition = 'opacity 0.3s ease';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        if (alert.parentNode) alert.remove();
+                    }, 300);
+                });
+            }, 4000);
         });
     </script>
 

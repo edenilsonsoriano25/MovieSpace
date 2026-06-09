@@ -16,26 +16,20 @@
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="toast-alert alert-success-premium">
-                <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
-                <div class="toast-content">{{ session('success') }}</div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="toast-alert alert-error-premium">
-                <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
-                <div class="toast-content">{{ session('error') }}</div>
-            </div>
-        @endif
-
         <div class="loans-stats-grid">
             <div class="loans-stat-card border-glow-blue">
                 <div class="stat-icon-box icon-blue"><i class="fas fa-ticket-alt"></i></div>
                 <div class="stat-info">
                     <div class="stat-number">{{ $prestamos->total() }}</div>
                     <div class="stat-label">Total Préstamos</div>
+                </div>
+            </div>
+            
+            <div class="loans-stat-card border-glow-purple">
+                <div class="stat-icon-box icon-purple"><i class="fas fa-clock"></i></div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ $prestamos->where('estado_prestamo', 'pendiente')->count() }}</div>
+                    <div class="stat-label">Solicitudes Pendientes</div>
                 </div>
             </div>
             
@@ -91,10 +85,22 @@
                             @endif
                         </td>
                         <td>
-                            @if($prestamo->estado_prestamo == 'activo')
-                                <span class="status-pill status-pill-active"><span class="pulse-dot"></span> Activo</span>
+                            @if($prestamo->estado_prestamo == 'pendiente')
+                                <span class="status-pill status-pill-pending">
+                                    <i class="fas fa-hourglass-half"></i> Pendiente
+                                </span>
+                            @elseif($prestamo->estado_prestamo == 'activo')
+                                <span class="status-pill status-pill-active">
+                                    <span class="pulse-dot"></span> Activo
+                                </span>
+                            @elseif($prestamo->estado_prestamo == 'rechazado')
+                                <span class="status-pill status-pill-rejected">
+                                    <i class="fas fa-times-circle"></i> Rechazado
+                                </span>
                             @else
-                                <span class="status-pill status-pill-completed"><i class="fas fa-check-circle"></i> Devuelto</span>
+                                <span class="status-pill status-pill-completed">
+                                    <i class="fas fa-check-circle"></i> Devuelto
+                                </span>
                             @endif
                         </td>
                         <td class="td-fine {{ $prestamo->multa_total > 0 ? 'text-danger-fine' : 'text-fine-zero' }}">
@@ -102,6 +108,12 @@
                         </td>
                         <td class="td-actions-cell">
                             <div class="actions-wrapper">
+                                @if($prestamo->estado_prestamo == 'pendiente')
+                                    <button class="btn-loan-action btn-action-pending" onclick="verDetallePendiente({{ $prestamo->id }})">
+                                        <i class="fas fa-eye"></i> Ver Solicitud
+                                    </button>
+                                @endif
+                                
                                 @if($prestamo->estado_prestamo == 'activo')
                                     <button class="btn-loan-action btn-action-return" onclick="confirmDevolucion({{ $prestamo->id }})">
                                         <i class="fas fa-undo-alt"></i> Devolver
@@ -204,7 +216,7 @@
 
     .loans-stats-grid {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
         gap: 1.5rem !important;
         margin-bottom: 3rem;
         width: 100%;
@@ -222,6 +234,7 @@
     }
 
     .border-glow-blue { border-left: 4px solid #2196f3; }
+    .border-glow-purple { border-left: 4px solid #9c27b0; }
     .border-glow-teal { border-left: 4px solid #2ec4b6; }
     .border-glow-orange { border-left: 4px solid #ff9f43; }
 
@@ -237,6 +250,7 @@
     }
 
     .icon-blue { color: #2196f3; }
+    .icon-purple { color: #9c27b0; }
     .icon-teal { color: #2ec4b6; }
     .icon-orange { color: #ff9f43; }
 
@@ -339,7 +353,9 @@
         gap: 5px;
         text-transform: uppercase;
     }
+    .status-pill-pending { background-color: rgba(156, 39, 176, 0.12); color: #ce93d8; }
     .status-pill-active { background-color: rgba(46, 196, 182, 0.12); color: #2ec4b6; }
+    .status-pill-rejected { background-color: rgba(244, 67, 54, 0.12); color: #ef5350; }
     .status-pill-completed { background-color: rgba(108, 117, 125, 0.15); color: #8a8a8a; }
 
     .pulse-dot {
@@ -358,6 +374,7 @@
         gap: 0.5rem;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
     }
 
     .btn-loan-action {
@@ -371,6 +388,18 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
+    }
+
+    .btn-action-pending {
+        background-color: rgba(156, 39, 176, 0.12);
+        color: #ce93d8;
+        border: 1px solid rgba(156, 39, 176, 0.2);
+    }
+
+    .btn-action-pending:hover {
+        background-color: #9c27b0;
+        color: #ffffff;
+        border-color: transparent;
     }
 
     .btn-action-return {
@@ -398,9 +427,6 @@
         border-color: transparent;
     }
 
-    /* ==========================================================================
-       🛡️ BLINDAJE ULTRA-STRICT CONTRA FONDOS BLANCOS INVOLUNTARIOS EN EL MODAL
-       ========================================================================== */
     .swal-modal-table {
         width: 100% !important;
         margin-top: 15px !important;
@@ -409,7 +435,6 @@
         background-color: #1a1d24 !important;
     }
 
-    /* Fuerza de forma absoluta a que ninguna fila o celda herede fondos de Bootstrap */
     .swal-modal-table tr, 
     .swal-modal-table td {
         background-color: #1a1d24 !important;
@@ -440,69 +465,55 @@
         box-sizing: border-box;
     }
 
-    .premium-pagination-box div:first-child,
-    .premium-pagination-box p,
-    .premium-pagination-box .text-sm,
-    .premium-pagination-box .hidden {
-        display: none !important;
-    }
-
-    .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
-    .premium-pagination-box flex,
-    .premium-pagination-box .flex {
+    .premium-pagination-box ul.pagination {
         display: flex !important;
         flex-direction: row !important;
-        justify-content: center !important;
-        align-items: center !important;
-        gap: 8px !important;
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 6px !important;
     }
 
-    .premium-pagination-box a,
-    .premium-pagination-box span {
+    .premium-pagination-box .page-item .page-link,
+    .premium-pagination-box .page-link,
+    .premium-pagination-box nav span,
+    .premium-pagination-box nav a {
         background-color: #111317 !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
         color: #b3b3b3 !important;
-        padding: 10px 16px !important;
-        border-radius: 8px !important;
-        font-weight: 700 !important;
-        font-size: 0.9rem !important;
+        padding: 8px 14px !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        font-size: 0.88rem !important;
         text-decoration: none !important;
         display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
     }
 
-    .premium-pagination-box a:hover {
+    .premium-pagination-box .page-item:not(.active) .page-link:hover,
+    .premium-pagination-box nav a:hover {
         background-color: #222731 !important;
         color: #ffffff !important;
         border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .premium-pagination-box span[aria-current="page"],
-    .premium-pagination-box .bg-blue-600 {
+    .premium-pagination-box .page-item.active .page-link,
+    .premium-pagination-box .active > .page-link,
+    .premium-pagination-box nav span[aria-current="page"] {
         background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
         color: #ffffff !important;
         border-color: transparent !important;
-    }
-
-    .premium-pagination-box span[aria-disabled="true"] {
-        background-color: rgba(255, 255, 255, 0.01) !important;
-        color: #3a404a !important;
-        border-color: rgba(255, 255, 255, 0.02) !important;
-        pointer-events: none !important;
-    }
-
-    .premium-pagination-box svg {
-        width: 16px !important;
-        height: 16px !important;
-        fill: currentColor !important;
+        font-weight: 700 !important;
     }
 
     @media (max-width: 768px) {
         .loans-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         .btn-add-loan { width: 100%; justify-content: center; }
+        .actions-wrapper { flex-direction: column; }
+        .btn-loan-action { width: 100%; justify-content: center; }
     }
 </style>
 
@@ -527,10 +538,33 @@ function confirmDevolucion(id) {
     });
 }
 
+function verDetallePendiente(id) {
+    Swal.fire({
+        title: '⚠️ Solicitud Pendiente',
+        text: "Esta solicitud está en espera de revisión. Por favor, dirígete a la sección de Solicitudes Pendientes para aprobar o rechazar.",
+        icon: 'info',
+        background: '#1a1d24',
+        color: '#ffffff',
+        confirmButtonColor: '#9c27b0',
+        confirmButtonText: '<i class="fas fa-paper-plane"></i> Ir a Solicitudes'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = "{{ route('solicitudes.pendientes') }}";
+        }
+    });
+}
+
 function verDetalle(id, cliente, email, peliculas, salida, limite, estado, multa) {
-    let estadoBadge = estado === 'activo' 
-        ? '<span style="color: #2ec4b6; font-weight: bold; text-transform: uppercase;">Activo</span>' 
-        : '<span style="color: #8a8a8a; font-weight: bold; text-transform: uppercase;">Devuelto</span>';
+    let estadoBadge = '';
+    if (estado === 'pendiente') {
+        estadoBadge = '<span style="color: #ce93d8; font-weight: bold; text-transform: uppercase;"><i class="fas fa-hourglass-half"></i> Pendiente</span>';
+    } else if (estado === 'activo') {
+        estadoBadge = '<span style="color: #2ec4b6; font-weight: bold; text-transform: uppercase;"><span class="pulse-dot" style="display: inline-block; margin-right: 5px;"></span> Activo</span>';
+    } else if (estado === 'rechazado') {
+        estadoBadge = '<span style="color: #ef5350; font-weight: bold; text-transform: uppercase;"><i class="fas fa-times-circle"></i> Rechazado</span>';
+    } else {
+        estadoBadge = '<span style="color: #8a8a8a; font-weight: bold; text-transform: uppercase;"><i class="fas fa-check-circle"></i> Devuelto</span>';
+    }
 
     let multaTexto = parseFloat(multa) > 0 
         ? `<span style="color: #ef5350; font-weight: bold;">$${multa}</span>` 
@@ -573,15 +607,5 @@ function verDetalle(id, cliente, email, peliculas, salida, limite, estado, multa
         confirmButtonText: 'Cerrar Ventana'
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        let alerts = document.querySelectorAll('.toast-alert');
-        alerts.forEach(alert => {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 4000);
-});
 </script>
 @endsection

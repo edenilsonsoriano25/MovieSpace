@@ -17,27 +17,31 @@
         </div>
 
         <div class="premium-form-card">
-            <form method="POST" action="{{ route('prestamos.store') }}" class="premium-interactive-form">
+            <form method="POST" action="{{ route('prestamos.store') }}" class="premium-interactive-form" id="prestamoForm">
                 @csrf
                 
                 <div class="form-premium-section">
                     <h3 class="section-form-title"><i class="fas fa-user-tag"></i> Datos del Cliente</h3>
                     <div class="form-premium-group">
-                        <label for="search_cliente">Buscar Afiliado (Escribe nombre o correo)</label>
+                        <label for="search_cliente">Buscar o Seleccionar Afiliado (Escribe nombre o correo)</label>
                         <div class="premium-input-search-wrapper">
                             <i class="fas fa-search search-input-icon"></i>
-                            <input type="text" id="search_cliente" placeholder="Empieza a escribir para buscar un cliente..." class="premium-search-input" autocomplete="off">
+                            <input type="text" id="search_cliente" placeholder="Ej: Hil o hailyaneth@gmail.com" class="premium-search-input" autocomplete="off">
                         </div>
                         
                         <div class="premium-select-wrapper mt-2 customer-list-container" id="cliente_list_container">
-                            <select name="id_usuario" id="id_usuario" required size="4" class="premium-scrollable-select">
+                            <select name="id_usuario" id="id_usuario" required size="5" class="premium-scrollable-select">
+                                <option value="" disabled selected>-- Selecciona un cliente --</option>
                                 @foreach($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}" data-search="{{ strtolower($cliente->name . ' ' . $cliente->email) }}">
+                                    <option value="{{ $cliente->id }}" data-search="{{ strtolower($cliente->name . ' ' . $cliente->email) }}" data-name="{{ $cliente->name }}" data-email="{{ $cliente->email }}">
                                         {{ $cliente->name }} — {{ $cliente->email }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
+                        <small class="form-text text-muted" style="color: #6c757d; font-size: 0.75rem;">
+                            <i class="fas fa-info-circle"></i> Selecciona un cliente de la lista o busca escribiendo arriba
+                        </small>
                     </div>
                 </div>
 
@@ -60,8 +64,8 @@
                                 <div class="cd-media-wrapper">
                                     <div class="cd-disc">
                                         <div class="cd-hole"></div>
-                                        @if($pelicula->imagen)
-                                            <img src="{{ asset('storage/' . $pelicula->imagen) }}" alt="{{ $pelicula->titulo }}" class="cd-poster-img">
+                                        @if($pelicula->portada)
+                                            <img src="{{ $pelicula->portada }}" alt="{{ $pelicula->titulo }}" class="cd-poster-img">
                                         @else
                                             <div class="cd-poster-placeholder">
                                                 <i class="fas fa-compact-disc"></i>
@@ -262,7 +266,12 @@
         font-weight: 600;
     }
 
-    /* BUSCADORES PREMIUM INPUTS */
+    .form-text {
+        color: #6c757d !important;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
     .premium-input-search-wrapper {
         position: relative;
         width: 100%;
@@ -299,18 +308,24 @@
         font-size: 0.9rem;
     }
 
-    /* 📌 OCULTAR CONTENEDOR DEL LISTADO DE CLIENTES POR DEFECTO */
     .customer-list-container {
-        display: none; 
-        transition: all 0.3s ease;
+        display: block; 
+        margin-top: 1rem;
     }
 
-    /* SELECT EXPANDIDO EN MODO LISTA */
     .premium-scrollable-select {
+        width: 100%;
         height: auto !important;
-        max-height: 160px;
+        max-height: 200px;
         overflow-y: auto;
         padding: 8px !important;
+        background-color: #111317;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 0.95rem;
+        outline: none;
+        box-sizing: border-box;
     }
 
     .premium-scrollable-select option {
@@ -319,6 +334,7 @@
         margin-bottom: 4px;
         background-color: #111317;
         transition: background 0.15s;
+        cursor: pointer;
     }
 
     .premium-scrollable-select option:hover {
@@ -331,7 +347,7 @@
         color: #ffffff !important;
     }
 
-    .premium-form-card select {
+    .premium-form-card select:not([size]) {
         width: 100%;
         padding: 12px 16px;
         background-color: #111317;
@@ -346,7 +362,6 @@
         cursor: pointer;
     }
 
-    /* SELECTS PLANOS INFERIORES */
     .premium-select-wrapper { position: relative; width: 100%; }
     .premium-select-wrapper select:not([size]) { appearance: none; -webkit-appearance: none; padding-right: 40px; }
     .premium-select-wrapper select:not([size]):focus { border-color: #ff4b2b; box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15); }
@@ -359,7 +374,6 @@
     .form-premium-row { display: flex; gap: 1.5rem; }
     .form-premium-row .form-premium-group { flex: 1; }
 
-    /* REJILLA MULTIMEDIA */
     .peliculas-premium-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
@@ -414,7 +428,6 @@
         transform: translate(-50%, -50%);
     }
 
-    /* 📀 MAQUETACIÓN PREMIUM EFECTO DISCO CD FISICO */
     .cd-media-wrapper {
         flex-shrink: 0;
         width: 65px;
@@ -470,7 +483,6 @@
 
     .pelicula-premium-checkbox:hover .cd-disc { transform: rotate(45deg); }
     .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) .cd-disc { border-color: #ff4b2b; box-shadow: 0 0 12px rgba(255, 75, 43, 0.4); }
-    .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) .cd-hole { background-color: #161213; border-color: rgba(255, 75, 43, 0.2); }
     .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) { border-color: rgba(255, 75, 43, 0.3); background-color: rgba(255, 75, 43, 0.02); }
     .pelicula-premium-checkbox:hover { border-color: rgba(255, 255, 255, 0.1); background-color: #14171d; }
 
@@ -540,6 +552,14 @@
         box-shadow: 0 6px 18px rgba(46, 196, 182, 0.3);
     }
 
+    /* Estilo para el input de búsqueda cuando tiene un cliente seleccionado */
+    .premium-search-input.cliente-seleccionado {
+        border-color: #2ec4b6;
+        background-color: #1a2a2a;
+        color: #2ec4b6;
+        font-weight: 500;
+    }
+
     @media (max-width: 768px) {
         .create-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         .btn-premium-back, .form-premium-actions { width: 100%; }
@@ -554,61 +574,141 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 🔍 1. Lógica del Buscador de Clientes Dinámico
+    // 🔍 1. Lógica del Buscador de Clientes Dinámico - CON SELECCIÓN VISIBLE
     const searchCliente = document.getElementById('search_cliente');
-    const containerCliente = document.getElementById('cliente_list_container');
     const selectCliente = document.getElementById('id_usuario');
     const optionsCliente = selectCliente.querySelectorAll('option');
 
+    // Mostrar todos los clientes inicialmente
+    optionsCliente.forEach(option => {
+        option.style.display = 'block';
+    });
+
+    // Función para actualizar el input de búsqueda con el cliente seleccionado
+    function actualizarInputConClienteSeleccionado() {
+        const selectedOption = selectCliente.options[selectCliente.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const nombreCliente = selectedOption.getAttribute('data-name');
+            const emailCliente = selectedOption.getAttribute('data-email');
+            searchCliente.value = `${nombreCliente} — ${emailCliente}`;
+            searchCliente.classList.add('cliente-seleccionado');
+            
+            // Opcional: Mostrar un pequeño indicador visual
+            searchCliente.style.borderColor = '#2ec4b6';
+            searchCliente.style.backgroundColor = '#1a2a2a';
+            searchCliente.style.color = '#2ec4b6';
+        } else {
+            searchCliente.value = '';
+            searchCliente.classList.remove('cliente-seleccionado');
+            searchCliente.style.borderColor = '';
+            searchCliente.style.backgroundColor = '';
+            searchCliente.style.color = '';
+        }
+    }
+
+    // Evento cuando se selecciona una opción del select
+    selectCliente.addEventListener('change', function() {
+        actualizarInputConClienteSeleccionado();
+        
+        // Limpiar filtro de búsqueda y mostrar todos los clientes
+        searchCliente.value = '';
+        optionsCliente.forEach(option => {
+            option.style.display = 'block';
+        });
+        
+        // Volver a poner el valor del cliente seleccionado en el input
+        actualizarInputConClienteSeleccionado();
+    });
+
+    // Filtrar clientes mientras se escribe en la búsqueda
     searchCliente.addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase().trim();
         
-        // Si el buscador está vacío, ocultamos la lista completa
+        // Si el buscador tiene texto, remover la clase de seleccionado
+        if (term !== '') {
+            searchCliente.classList.remove('cliente-seleccionado');
+            searchCliente.style.borderColor = '';
+            searchCliente.style.backgroundColor = '';
+            searchCliente.style.color = '';
+        }
+        
         if (term === '') {
-            containerCliente.style.display = 'none';
+            // Si está vacío, mostrar todos y resetear selección
+            optionsCliente.forEach(option => {
+                option.style.display = 'block';
+            });
+            // No resetear la selección automáticamente para no perder el cliente elegido
             return;
         }
 
-        // Si tiene texto, hacemos visible la caja de opciones
-        containerCliente.style.display = 'block';
-        
+        // Filtrar opciones según el término de búsqueda
+        let hayCoincidencias = false;
         optionsCliente.forEach(option => {
             const searchData = option.getAttribute('data-search');
-            if (searchData) {
-                if (searchData.includes(term)) {
-                    option.style.display = 'block';
-                } else {
-                    option.style.display = 'none';
-                }
+            if (searchData && searchData.includes(term)) {
+                option.style.display = 'block';
+                hayCoincidencias = true;
+            } else {
+                option.style.display = 'none';
             }
         });
+        
+        // Si hay una sola coincidencia y el usuario presiona Enter, seleccionarla automáticamente
+        const opcionesVisibles = Array.from(optionsCliente).filter(opt => opt.style.display !== 'none');
+        if (opcionesVisibles.length === 1 && opcionesVisibles[0].value) {
+            // Auto-seleccionar la única coincidencia (opcional)
+            // selectCliente.value = opcionesVisibles[0].value;
+            // actualizarInputConClienteSeleccionado();
+        }
     });
+
+    // Permitir seleccionar con Enter después de buscar
+    searchCliente.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const opcionesVisibles = Array.from(optionsCliente).filter(opt => opt.style.display !== 'none' && opt.value);
+            if (opcionesVisibles.length === 1) {
+                selectCliente.value = opcionesVisibles[0].value;
+                actualizarInputConClienteSeleccionado();
+            } else if (opcionesVisibles.length > 1) {
+                // Mostrar un pequeño mensaje o simplemente hacer foco en el select
+                selectCliente.focus();
+            }
+        }
+    });
+
+    // Si ya hay un cliente seleccionado por defecto (por ejemplo, después de un error de validación)
+    if (selectCliente.value) {
+        actualizarInputConClienteSeleccionado();
+    }
 
     // 🔍 2. Lógica del Buscador de Películas (Grid Checkboxes)
     const searchPelicula = document.getElementById('search_pelicula');
     const movieCards = document.querySelectorAll('.pelicula-premium-checkbox');
     const emptyAlert = document.getElementById('movie_empty_alert');
 
-    searchPelicula.addEventListener('input', function(e) {
-        const term = e.target.value.toLowerCase().trim();
-        let visibleCount = 0;
+    if (searchPelicula) {
+        searchPelicula.addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase().trim();
+            let visibleCount = 0;
 
-        movieCards.forEach(card => {
-            const titulo = card.getAttribute('data-titulo');
-            if (titulo.includes(term)) {
-                card.style.setProperty('display', 'block', 'important');
-                visibleCount++;
+            movieCards.forEach(card => {
+                const titulo = card.getAttribute('data-titulo');
+                if (titulo && titulo.includes(term)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0 && term !== '') {
+                emptyAlert.classList.remove('d-none');
             } else {
-                card.style.setProperty('display', 'none', 'important');
+                emptyAlert.classList.add('d-none');
             }
         });
-
-        if (visibleCount === 0 && term !== '') {
-            emptyAlert.classList.remove('d-none');
-        } else {
-            emptyAlert.classList.add('d-none');
-        }
-    });
+    }
 });
 </script>
 @endsection

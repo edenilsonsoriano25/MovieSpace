@@ -21,7 +21,9 @@ class Pago extends Model
     ];
     
     protected $casts = [
-        'fecha_pago' => 'date'
+        'fecha_pago' => 'date',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
     
     // Relación con préstamo

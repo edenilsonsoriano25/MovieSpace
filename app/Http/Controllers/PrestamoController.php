@@ -10,25 +10,17 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-// Implementación obligatoria del contrato de Middlewares para Laravel 11
 use Illuminate\Routing\Controllers\HasMiddleware;
 
 class PrestamoController extends Controller implements HasMiddleware
 {
-    /**
-     * Define los middlewares del controlador de forma estática (Laravel 11).
-     */
     public static function middleware(): array
     {
         return [
-            // Aplica el middleware 'auth' a todos los métodos operativos
             'auth',
         ];
     }
 
-    /**
-     * Listado global de préstamos para el personal administrativo y técnico.
-     */
     public function index()
     {
         if (auth()->user()->rol === 'cliente') {
@@ -36,15 +28,13 @@ class PrestamoController extends Controller implements HasMiddleware
         }
 
         $prestamos = Prestamo::with(['usuario', 'trabajador', 'detalles.pelicula'])
+            ->orderByRaw("FIELD(estado_prestamo, 'pendiente', 'activo', 'completado', 'rechazado')")
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         return view('prestamos.index', compact('prestamos'));
     }
 
-    /**
-     * Formulario de apertura de alquileres en mostrador físico.
-     */
     public function create()
     {
         if (auth()->user()->rol === 'cliente') {
@@ -57,9 +47,6 @@ class PrestamoController extends Controller implements HasMiddleware
         return view('prestamos.create', compact('clientes', 'peliculas'));
     }
 
-    /**
-     * Procesa la inserción del préstamo desde el mostrador (Staff).
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -70,7 +57,6 @@ class PrestamoController extends Controller implements HasMiddleware
             'metodo_pago' => 'required|in:efectivo,tarjeta,transferencia'
         ]);
 
-        // Evita que un afiliado acumule más de una orden activa de forma simultánea
         $prestamoActivo = Prestamo::where('id_usuario', $request->id_usuario)
             ->where('estado_prestamo', 'activo')
             ->exists();
@@ -79,7 +65,6 @@ class PrestamoController extends Controller implements HasMiddleware
             return back()->with('error', '❌ El cliente seleccionado ya posee una orden de arriendo activa en el sistema.');
         }
 
-        // Validación rigurosa perimetral de stock físico antes de abrir la transacción
         foreach ($request->peliculas as $peliculaId) {
             $pelicula = Pelicula::find($peliculaId);
             if ($pelicula->copias_en_estante <= 0) {
@@ -95,7 +80,7 @@ class PrestamoController extends Controller implements HasMiddleware
 
             $prestamo = Prestamo::create([
                 'id_usuario' => $request->id_usuario,
-                'id_trabajador' => auth()->id(), // Registra la firma del empleado en turno
+                'id_trabajador' => auth()->id(),
                 'fecha_salida' => $fechaSalida,
                 'fecha_limite' => $fechaLimite,
                 'estado_prestamo' => 'activo'
@@ -113,12 +98,10 @@ class PrestamoController extends Controller implements HasMiddleware
                     'monto_multa' => 0
                 ]);
 
-                // Decrementa las existencias físicas del estante de CDs
                 $pelicula->decrement('copias_en_estante');
                 $totalPagar += $pelicula->precio_alquiler;
             }
 
-            // Registra la auditoría del cobro en el libro diario de caja
             Pago::create([
                 'id_prestamo' => $prestamo->id,
                 'id_usuario' => auth()->id(),
@@ -137,9 +120,6 @@ class PrestamoController extends Controller implements HasMiddleware
         }
     }
 
-    /**
-     * Procesa el retorno y recepción de las películas devueltas en mostrador.
-     */
     public function devolucion(Prestamo $prestamo)
     {
         if ($prestamo->estado_prestamo !== 'activo') {
@@ -153,13 +133,11 @@ class PrestamoController extends Controller implements HasMiddleware
 
             $multaTotal = 0;
 
-            // Lógica algorítmica de cálculo de mora y penalizaciones de MovieSpace
             if ($fechaEntrega->gt($fechaLimite)) {
                 $diasRetraso = (int) $fechaEntrega->diffInDays($fechaLimite);
-                $multaPorDia = 1.50; // Tarifa fija por retraso diario de CDs
+                $multaPorDia = 1.50;
                 $multaTotal = $diasRetraso * $multaPorDia;
 
-                // Divide la multa equitativamente entre los productos arrendados
                 $montoPorPelicula = $multaTotal / max($prestamo->detalles->count(), 1);
                 foreach ($prestamo->detalles as $detalle) {
                     $detalle->update(['monto_multa' => $montoPorPelicula]);
@@ -172,19 +150,17 @@ class PrestamoController extends Controller implements HasMiddleware
                 'multa_total' => $multaTotal
             ]);
 
-            // Devuelve e incrementa el stock físico de las películas al estante
             foreach ($prestamo->detalles as $detalle) {
                 $detalle->pelicula->increment('copias_en_estante');
             }
 
-            // Si acumuló mora, se inyecta la penalización contable a la caja chica
             if ($multaTotal > 0) {
                 Pago::create([
                     'id_prestamo' => $prestamo->id,
                     'id_usuario' => auth()->id(),
                     'monto' => $multaTotal,
                     'concepto' => 'multa',
-                    'metodo_pago' => request('metodo_pago', 'efectivo'),
+                    'metodo_pago' => 'efectivo',
                     'fecha_pago' => $fechaEntrega
                 ]);
             }

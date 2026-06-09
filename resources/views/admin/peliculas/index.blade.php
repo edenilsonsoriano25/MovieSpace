@@ -16,20 +16,6 @@
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="toast-alert alert-success-premium">
-                <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
-                <div class="toast-content">{{ session('success') }}</div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="toast-alert alert-error-premium">
-                <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
-                <div class="toast-content">{{ session('error') }}</div>
-            </div>
-        @endif
-
         <div class="premium-table-wrapper">
             <table class="premium-data-table">
                 <thead>
@@ -106,7 +92,7 @@
     .admin-catalog-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con el padding de app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -163,7 +149,6 @@
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* CONTENEDOR DE LA DATA-TABLE */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -195,17 +180,15 @@
         color: #b3b3b3;
         font-size: 0.95rem;
         vertical-align: middle;
-        background-color: #1a1d24 !important; /* Blindaje contra fondos blancos */
+        background-color: #1a1d24 !important;
     }
 
-    /* Resaltado de fila al pasar cursor encima */
     .premium-data-table tbody tr:hover td {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
     }
 
-    /* BLINDAJE INTEGRAL CONTRA LA LÍNEA BLANCA EN LA COLUMNA DE ACCIONES */
     .premium-data-table td.td-actions-buttons,
     .premium-data-table th:last-child,
     .premium-data-table td:last-child {
@@ -228,7 +211,6 @@
     .td-price { color: #2ec4b6 !important; font-weight: 700; font-family: monospace; }
     .td-stock { font-family: monospace; }
 
-    /* Badges de Existencias (Stock) */
     .badge-stock-pill {
         font-size: 0.76rem;
         font-weight: 700;
@@ -251,7 +233,6 @@
         display: inline-block;
     }
 
-    /* Celda de Acciones y Botones Operativos */
     .td-actions-buttons {
         display: flex;
         gap: 0.6rem;
@@ -299,9 +280,6 @@
         box-shadow: 0 4px 12px rgba(211, 47, 47, 0.25);
     }
 
-    /* ==========================================================================
-       ESTILOS DE PAGINACIÓN PREMIUM MEJORADOS (FIX APILADO)
-       ========================================================================== */
     .premium-pagination-box {
         padding: 1.5rem;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -311,14 +289,6 @@
         background-color: #1a1d24;
     }
 
-    /* Ocultar texto informativo en inglés nativo de Laravel */
-    .premium-pagination-box div:first-child p,
-    .premium-pagination-box p.text-muted,
-    .premium-pagination-box .text-sm {
-        display: none !important;
-    }
-
-    /* Forzar alineación horizontal limpia */
     .premium-pagination-box nav,
     .premium-pagination-box ul.pagination {
         display: flex !important;
@@ -345,7 +315,6 @@
         align-items: center;
         justify-content: center;
         transition: all 0.2s ease;
-        box-shadow: none !important;
     }
 
     .premium-pagination-box .page-item:not(.active) .page-link:hover,
@@ -372,7 +341,6 @@
         pointer-events: none;
     }
 
-    /* Contenedores Auxiliares */
     .td-empty-state {
         padding: 5rem 0 !important;
         text-align: center;
@@ -430,16 +398,5 @@ function confirmDelete(id, titulo) {
         }
     });
 }
-
-// Fade out progresivo controlado para los carteles de alertas de Laravel
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        let alerts = document.querySelectorAll('.toast-alert');
-        alerts.forEach(alert => {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 4000);
-});
 </script>
 @endsection

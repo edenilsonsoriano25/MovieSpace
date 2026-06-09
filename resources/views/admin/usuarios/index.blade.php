@@ -17,20 +17,6 @@
             </button>
         </div>
 
-        @if(session('success'))
-            <div class="toast-alert alert-success-premium">
-                <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
-                <div class="toast-content">{{ session('success') }}</div>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="toast-alert alert-error-premium">
-                <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
-                <div class="toast-content">{{ session('error') }}</div>
-            </div>
-        @endif
-
         <div class="admin-stats-grid">
             <div class="admin-stat-card border-glow-blue">
                 <div class="stat-icon-box icon-blue"><i class="fas fa-user-cog"></i></div>
@@ -90,17 +76,22 @@
                         </td>
                         <td class="td-date">{{ $usuario->created_at->format('d/m/Y') }}</td>
                         <td style="text-align: center;">
-                            @if($usuario->rol != 'admin')
-                                <button class="btn-table-delete" onclick="confirmDeleteUser({{ $usuario->id }}, '{{ $usuario->name }}')">
-                                    <i class="fas fa-trash-alt"></i> Eliminar
-                                </button>
-                                <form action="{{ route('admin.usuarios.destroy', $usuario->id) }}" method="POST" style="display: none;" id="form-delete-{{ $usuario->id }}">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
-                            @else
-                                <span class="badge-system-lock"><i class="fas fa-lock"></i> Principal</span>
-                            @endif
+                            <div class="actions-wrapper" style="display: flex; gap: 8px; justify-content: center;">
+                                @if($usuario->rol != 'admin')
+                                    <a href="{{ route('admin.usuarios.edit', $usuario->id) }}" class="btn-table-edit">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <button class="btn-table-delete" onclick="confirmDeleteUser({{ $usuario->id }}, '{{ $usuario->name }}')">
+                                        <i class="fas fa-trash-alt"></i> Eliminar
+                                    </button>
+                                    <form action="{{ route('admin.usuarios.destroy', $usuario->id) }}" method="POST" style="display: none;" id="form-delete-{{ $usuario->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                @else
+                                    <span class="badge-system-lock"><i class="fas fa-lock"></i> Principal</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
@@ -370,6 +361,29 @@
         border: 1px solid rgba(255,255,255,0.02);
     }
 
+    .btn-table-edit {
+        background-color: rgba(255, 152, 0, 0.08);
+        color: #ffb74d;
+        border: 1px solid rgba(255, 152, 0, 0.2);
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        text-decoration: none;
+    }
+
+    .btn-table-edit:hover {
+        background-color: #f57c00;
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(245, 124, 0, 0.25);
+    }
+
     .btn-table-delete {
         background: rgba(244, 67, 54, 0.08);
         color: #ef5350;
@@ -389,7 +403,7 @@
         background: #d32f2f;
         color: #ffffff;
         border-color: transparent;
-        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.25);
     }
 
     .premium-pagination-box {
@@ -399,7 +413,6 @@
         justify-content: center;
     }
 
-    /* ── MAQUETACIÓN PREMIUM ARQUITECTÓNICA DEL MODAL ── */
     .modal-premium-overlay {
         display: none;
         position: fixed;
@@ -420,8 +433,6 @@
         border: 1px solid rgba(255,255,255,0.03);
         animation: modalSlideDown 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
         overflow: hidden;
-        
-        /* Forzamos control flex total para anclar elementos */
         max-height: 85vh;
         display: flex;
         flex-direction: column;
@@ -439,7 +450,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-shrink: 0; /* Bloquea el encogimiento */
+        flex-shrink: 0;
     }
 
     .modal-premium-header h3 {
@@ -455,7 +466,6 @@
     }
     .close-modal-btn:hover { color: #ffffff; }
 
-    /* CONTENEDOR INTELIGENTE CON SCROLL DINÁMICO */
     .modal-scroll-body {
         overflow-y: auto;
         flex-grow: 1;
@@ -504,7 +514,6 @@
         transform: translateY(-50%); pointer-events: none;
     }
 
-    /* PIE DE MODAL BLINDADO CONTRA DESPLAZAMIENTOS */
     .modal-premium-footer {
         background-color: #121419;
         display: flex;
@@ -512,7 +521,7 @@
         gap: 0.75rem;
         border-top: 1px solid rgba(255,255,255,0.04);
         padding: 1rem 1.5rem;
-        flex-shrink: 0; /* Forzado a mantenerse estático en la base */
+        flex-shrink: 0;
     }
 
     .btn-modal-cancel {
@@ -527,15 +536,6 @@
         box-shadow: 0 4px 12px rgba(46, 196, 182, 0.2); transition: transform 0.2s;
     }
     .btn-modal-save:hover { transform: translateY(-1px); }
-
-    .toast-alert {
-        display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: 10px;
-        color: #fff; font-weight: 600; font-size: 0.9rem; margin-bottom: 1.5rem;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: modalSlideDown 0.3s ease;
-    }
-    .alert-success-premium { background: #0ca678; border-left: 5px solid #02b875; }
-    .alert-error-premium { background: #f03e3e; border-left: 5px solid #ff1a1a; }
-    .toast-icon-box { font-size: 1.1rem; }
 
     @media (max-width: 768px) {
         .admin-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
@@ -573,10 +573,7 @@ function confirmDeleteUser(id, nombre) {
         confirmButtonColor: '#ff5252',
         cancelButtonColor: '#2a2e35',
         confirmButtonText: '<i class="fas fa-trash-alt"></i> Sí, eliminar',
-        cancelButtonText: 'Cancelar',
-        customClass: {
-            popup: 'swal-premium-dark-fix'
-        }
+        cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
             document.getElementById(`form-delete-${id}`).submit();

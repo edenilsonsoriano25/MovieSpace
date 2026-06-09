@@ -249,11 +249,9 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @media (max-width: 900px) { .form-layout-split { grid-template-columns: 1fr; gap: 2rem; } .form-preview-aside { max-width: 200px; margin: 0 auto; } }
 </style>
-@endsection
 
 @push('scripts')
 <script>
-    // CREDENCIALES UNIFICADAS DE MOVIESPACE
     const GEMINI_API_KEY = 'AIzaSyBsC0p2B6XdSEue3xn0Nnmri_nJCzLWtT4';
     const OMDB_API_KEY = 'd611cad6'; 
     const TMDB_API_KEY = '1f0be84ce73a753b8c79764aac7264aa'; 
@@ -418,14 +416,12 @@
                 }
             }
 
-            // Inyectamos inmediatamente los datos estables de las APIs
             document.getElementById('titulo').value = tituloFinal;
             document.getElementById('director').value = directorFinal;
             document.getElementById('año').value = anioFinal;
             document.getElementById('portada').value = portadaUrl;
             document.getElementById('genero').value = generoFinal;
 
-            // TRADUCCIÓN FLUIDA DE SINOPSIS CON GEMINI 2.5 FLASH
             if (sinopsisOriginal.trim().length > 0) {
                 try {
                     const promptTraduccion = `Traduce al español de forma fluida y profesional el siguiente resumen de la película "${tituloFinal}": "${sinopsisOriginal}". Devuelve únicamente el texto traducido de un máximo de 4 líneas, sin agregar introducciones, aclaraciones ni comillas.`;
@@ -497,3 +493,4 @@
     });
 </script>
 @endpush
+@endsection

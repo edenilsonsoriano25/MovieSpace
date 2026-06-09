@@ -16,13 +16,6 @@
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="toast-alert alert-success-premium">
-                <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
-                <div class="toast-content">{{ session('success') }}</div>
-            </div>
-        @endif
-
         <div class="premium-table-wrapper">
             <table class="premium-data-table">
                 <thead>
@@ -106,7 +99,7 @@
     .loans-dark-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -163,23 +156,6 @@
         border-color: rgba(255, 255, 255, 0.15);
     }
 
-    /* TOAST ALERTS INTERNOS */
-    .toast-alert {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background-color: #1a1d24;
-        border-radius: 12px;
-        padding: 1rem 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        transition: opacity 0.3s ease;
-    }
-    .alert-success-premium { border-left: 4px solid #2ec4b6; }
-    .toast-icon-box { font-size: 1.25rem; color: #2ec4b6; }
-    .toast-content { font-size: 0.95rem; color: #ffffff; }
-
-    /* CONTENEDOR DE LA DATA-TABLE */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -211,17 +187,15 @@
         color: #b3b3b3;
         font-size: 0.95rem;
         vertical-align: middle;
-        background-color: #1a1d24 !important; /* Capa anti-fondo blanco de Bootstrap */
+        background-color: #1a1d24 !important;
     }
 
-    /* Hover dinámico con resguardo gris ebanizado */
     .premium-data-table tbody tr:hover td {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
     }
 
-    /* Blindaje rígido para última columna en hover */
     .premium-data-table th:last-child,
     .premium-data-table td:last-child,
     .premium-data-table td.td-actions-cell {
@@ -242,7 +216,6 @@
     .text-muted-price { color: #ff416c; font-size: 0.85rem; font-weight: 600; }
     .td-date-normal, .td-days { font-family: monospace; color: #d1d1d1; }
 
-    /* Píldoras para método de pago */
     .badge-method-pill {
         display: inline-flex;
         align-items: center;
@@ -258,12 +231,12 @@
     .text-info-icon { color: #2196f3; }
     .text-warning-icon { color: #ff9f43; }
 
-    /* Alineación de Botones */
     .actions-wrapper {
         display: flex !important;
         gap: 0.5rem;
         justify-content: center;
         align-items: center;
+        flex-wrap: wrap;
     }
 
     .btn-loan-action {
@@ -305,7 +278,6 @@
         box-shadow: 0 4px 12px rgba(244, 67, 54, 0.25);
     }
 
-    /* ESTADO PARA BANDEJA VACÍA */
     .td-empty-state {
         padding: 4rem 2px !important;
         text-align: center;
@@ -331,6 +303,8 @@
     @media (max-width: 768px) {
         .loans-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         .btn-premium-back { width: 100%; justify-content: center; }
+        .actions-wrapper { flex-direction: column; width: 100%; }
+        .btn-loan-action { width: 100%; justify-content: center; }
     }
 </style>
 
@@ -373,16 +347,5 @@ function rechazarSolicitud(id) {
         }
     });
 }
-
-// Desvanecimiento controlado de avisos temporales
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(function() {
-        let alerts = document.querySelectorAll('.toast-alert');
-        alerts.forEach(alert => {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 300);
-        });
-    }, 4000);
-});
 </script>
 @endsection

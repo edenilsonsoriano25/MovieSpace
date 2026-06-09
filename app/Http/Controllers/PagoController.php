@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pago;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class PagoController extends Controller
 {
@@ -15,8 +16,12 @@ class PagoController extends Controller
     
     public function caja()
     {
-        $totalHoy = Pago::whereDate('created_at', today())->sum('monto');
-        $pagosHoy = Pago::whereDate('created_at', today())->get();
+        // Obtener la fecha actual en zona horaria de El Salvador
+        $hoy = Carbon::now('America/El_Salvador')->toDateString();
+        
+        $totalHoy = Pago::whereDate('created_at', $hoy)->sum('monto');
+        $pagosHoy = Pago::whereDate('created_at', $hoy)->get();
+        
         return view('pagos.caja', compact('totalHoy', 'pagosHoy'));
     }
 }

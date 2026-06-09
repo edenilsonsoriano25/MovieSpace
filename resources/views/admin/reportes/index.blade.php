@@ -21,17 +21,23 @@
                                 5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 
                                 9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
                             ];
+                            $anioSeleccionado = date('Y');
                             $mesActualNum = \Carbon\Carbon::now()->month;
+                            $anioActual = \Carbon\Carbon::now()->year;
                         @endphp
+                        
                         @foreach($mesesAnio as $numMes => $nombreMes)
-                            @if($numMes <= $mesActualNum)
-                                <option value="{{ $numMes }}" {{ $numMes == $mesActualNum ? 'selected' : '' }}>{{ $nombreMes }}</option>
+                            @php
+                                $mostrarMes = ($anioSeleccionado < $anioActual) || ($numMes <= $mesActualNum);
+                            @endphp
+                            @if($mostrarMes)
+                                <option value="{{ $numMes }}" {{ $numMes == $mesActualNum && $anioSeleccionado == $anioActual ? 'selected' : '' }}>{{ $nombreMes }}</option>
                             @endif
                         @endforeach
                     </select>
                 </div>
                 <div class="select-wrapper">
-                    <select id="anioReporte">
+                    <select id="anioReporte" onchange="cargarMesesPorAño()">
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
@@ -107,21 +113,26 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @php
+                        $anioActualTabla = \Carbon\Carbon::now()->year;
+                        $mesActualTabla = \Carbon\Carbon::now()->month;
+                    @endphp
                     @foreach($mesesAnio as $numMes => $nombreMes)
-                        @if($numMes <= $mesActualNum)
-                            @php
-                                $cantPrestamos = $conteosMensuales[$numMes] ?? 0;
-                                $ingAlquiler = $ingresosMensuales[$numMes] ?? 0;
-                                $moraMultas = $multasMensuales[$numMes] ?? 0;
-                                $totalNetoFila = $ingAlquiler + $moraMultas;
-                            @endphp
-                            <tr>
-                                <td class="td-month"><strong>{{ $nombreMes }}</strong></td>
-                                <td>{{ $cantPrestamos }} ords.</td>
-                                <td class="text-white-50">${{ number_format($ingAlquiler, 2) }}</td>
-                                <td class="text-danger-fine">${{ number_format($moraMultas, 2) }}</td>
-                                <td class="td-total-net">${{ number_format($totalNetoFila, 2) }}</td>
-                            </tr>
+                        @php
+                            $mostrarMes = ($anioActualTabla < $anioActualTabla) ? true : ($numMes <= $mesActualTabla);
+                            $cantPrestamos = $conteosMensuales[$numMes] ?? 0;
+                            $ingAlquiler = $ingresosMensuales[$numMes] ?? 0;
+                            $moraMultas = $multasMensuales[$numMes] ?? 0;
+                            $totalNetoFila = $ingAlquiler + $moraMultas;
+                        @endphp
+                        @if($mostrarMes)
+                        <tr>
+                            <td class="td-month"><strong>{{ $nombreMes }}</strong></td>
+                            <td>{{ $cantPrestamos }} ords.</td>
+                            <td class="text-white-50">${{ number_format($ingAlquiler, 2) }}</td>
+                            <td class="text-danger-fine">${{ number_format($moraMultas, 2) }}</td>
+                            <td class="td-total-net">${{ number_format($totalNetoFila, 2) }}</td>
+                        </tr>
                         @endif
                     @endforeach
                 </tbody>
@@ -139,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
     Chart.defaults.color = '#8a8a8a';
     Chart.defaults.font.family = "'Segoe UI', sans-serif";
 
-    // Rebanamos los arreglos para que los gráficos de Chart.js terminen simétricamente en el mes actual
     const mesCorte = {{ $mesActualNum }};
     const conteosReales = @json(array_values($conteosMensuales)).slice(0, mesCorte);
     const ingresosReales = @json(array_values($ingresosMensuales)).slice(0, mesCorte);
@@ -148,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const alquilerPuroReal = {{ $totalAlquilerPuro }};
     const multasHistoricasReales = {{ $totalMultasHistorico }};
 
-    // 1. Gráfico de Barras Combinado Dinámico
+    // Gráfico de Barras
     const ctx = document.getElementById('prestamosChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -181,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 2. Gráfico Circular Estilizado Dinámico
+    // Gráfico Circular
     const ctx2 = document.getElementById('pagosChart').getContext('2d');
     new Chart(ctx2, {
         type: 'doughnut',
@@ -205,6 +215,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function cargarMesesPorAño() {
+    const anio = document.getElementById('anioReporte').value;
+    const mesSelect = document.getElementById('mesReporte');
+    const anioActual = new Date().getFullYear();
+    const mesActual = new Date().getMonth() + 1;
+    
+    const meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    
+    mesSelect.innerHTML = '';
+    
+    let maxMes = 12;
+    if (parseInt(anio) === anioActual) {
+        maxMes = mesActual;
+    }
+    
+    for (let i = 0; i < maxMes; i++) {
+        const option = document.createElement('option');
+        option.value = i + 1;
+        option.textContent = meses[i];
+        if (i + 1 === mesActual && parseInt(anio) === anioActual) {
+            option.selected = true;
+        }
+        mesSelect.appendChild(option);
+    }
+}
 
 function generarPDF() {
     const nombreMes = document.getElementById('mesReporte').options[document.getElementById('mesReporte').selectedIndex].text;
@@ -364,9 +403,16 @@ function generarPDF() {
     .select-wrapper { position: relative; }
     .header-filters-group select { appearance: none; -webkit-appearance: none; }
     .select-wrapper::after {
-        content: '\f078'; font-family: 'Font Awesome 5 Free'; font-weight: 900;
-        font-size: 0.7rem; color: #6c757d; position: absolute; right: 14px; top: 50%;
-        transform: translateY(-50%); pointer-events: none;
+        content: '\f078';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        font-size: 0.7rem;
+        color: #6c757d;
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
     }
 
     .btn-generate-pdf {

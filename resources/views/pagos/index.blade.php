@@ -91,7 +91,7 @@
                             @endif
                         </td>
                         <td class="td-username"><strong>{{ $pago->usuario->name }}</strong></td>
-                        <td class="td-date">{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y H:i') }}</td>
+                        <td class="td-date">{{ \Carbon\Carbon::parse($pago->created_at)->timezone('America/El_Salvador')->format('d/m/Y h:i:s A') }}</td>
                         <td class="td-status-completed">
                             <div class="status-inner-box">
                                 <span class="status-dot-active"></span>

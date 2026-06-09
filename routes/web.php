@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\ReporteController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ClientePrestamoController;
-use App\Http\Controllers\SolicitudController;  // 👈 NUEVO: Controlador de solicitudes
+use App\Http\Controllers\SolicitudController;
 
 /*
 |--------------------------------------------------------------------------
@@ -117,12 +117,19 @@ Route::middleware(['auth'])->group(function () {
     ], function () {
 
         // Dashboard Gerencial
-        //  POR ESTO:
         Route::get('/dashboard', [ReporteController::class, 'dashboard'])->name('dashboard');
 
         // Control de Personal y Cuentas
         Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
         Route::post('/usuarios', [UsuarioController::class, 'store'])->name('usuarios.store');
+        
+        // =============================================================
+        // 👇 NUEVAS RUTAS PARA EDITAR USUARIOS (COPIAR ESTAS 2 LÍNEAS)
+        // =============================================================
+        Route::get('/usuarios/{usuario}/edit', [UsuarioController::class, 'edit'])->name('usuarios.edit');
+        Route::put('/usuarios/{usuario}', [UsuarioController::class, 'update'])->name('usuarios.update');
+        // =============================================================
+        
         Route::delete('/usuarios/{usuario}', [UsuarioController::class, 'destroy'])->name('usuarios.destroy');
 
         // Reportes Ejecutivos PDF

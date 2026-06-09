@@ -210,7 +210,6 @@
     .form-premium-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 1.5rem; }
     .btn-form-cancel { background-color: #2a2e35; color: #b3b3b3 !important; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.92rem; transition: all 0.2s; }
     .btn-form-cancel:hover { background-color: #343a44; color: #ffffff !important; }
-    
     .btn-form-update { background: linear-gradient(45deg, #ff9800, #f57c00); color: #ffffff; border: none; padding: 12px 26px; border-radius: 10px; font-weight: 600; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(245, 124, 0, 0.2); transition: all 0.2s ease; }
     .btn-form-update:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(245, 124, 0, 0.3); }
 
@@ -249,7 +248,6 @@
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @media (max-width: 900px) { .form-layout-split { grid-template-columns: 1fr; gap: 2rem; } .form-preview-aside { max-width: 200px; margin: 0 auto; } }
 </style>
-@endsection
 
 @push('scripts')
 <script>
@@ -423,7 +421,6 @@
             document.getElementById('portada').value = portadaUrl;
             document.getElementById('genero').value = generoFinal;
 
-            // TRADUCCIÓN FLUIDA DE SINOPSIS CON GEMINI 2.5 FLASH
             if (sinopsisOriginal.trim().length > 0) {
                 try {
                     const promptTraduccion = `Traduce al español de forma fluida y profesional el siguiente resumen de la película "${tituloFinal}": "${sinopsisOriginal}". Devuelve únicamente el texto traducido de un máximo de 4 líneas, sin agregar introducciones, aclaraciones ni comillas.`;
@@ -495,3 +492,4 @@
     });
 </script>
 @endpush
+@endsection
