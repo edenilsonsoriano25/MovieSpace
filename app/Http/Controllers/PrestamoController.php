@@ -28,8 +28,8 @@ class PrestamoController extends Controller implements HasMiddleware
         }
 
         $prestamos = Prestamo::with(['usuario', 'trabajador', 'detalles.pelicula'])
-            ->orderByRaw("FIELD(estado_prestamo, 'pendiente', 'activo', 'completado', 'rechazado')")
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw("FIELD(estado_prestamo, 'activo', 'pendiente', 'completado', 'rechazado')")
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return view('prestamos.index', compact('prestamos'));

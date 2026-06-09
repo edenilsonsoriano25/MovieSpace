@@ -11,13 +11,21 @@
                 <h1 class="catalog-main-title"><i class="fas fa-film"></i> Administrar Catálogo</h1>
                 <p class="catalog-main-subtitle">Controla el inventario de cintas, actualiza precios de arriendo y gestiona las copias físicas en la sucursal de Jayaque.</p>
             </div>
-            <a href="{{ route('admin.peliculas.create') }}" class="btn-premium-action btn-add-movie">
-                <i class="fas fa-plus-circle"></i> Agregar Película
-            </a>
+            
+            <div class="header-controls-group" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div class="premium-input-search-wrapper" style="position: relative; width: 300px;">
+                    <i class="fas fa-search search-input-icon" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                    <input type="text" id="search_pelicula_admin" placeholder="Buscar película por título..." class="premium-search-input" style="width: 100%; padding: 12px 16px 12px 42px; background-color: #1a1d24; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; color: #ffffff; font-size: 0.92rem; outline: none; transition: all 0.2s ease;" autocomplete="off">
+                </div>
+                
+                <a href="{{ route('admin.peliculas.create') }}" class="btn-premium-action btn-add-movie">
+                    <i class="fas fa-plus-circle"></i> Agregar Película
+                </a>
+            </div>
         </div>
 
         <div class="premium-table-wrapper">
-            <table class="premium-data-table">
+            <table class="premium-data-table" id="catalog_table_admin">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -33,7 +41,7 @@
                 </thead>
                 <tbody>
                     @forelse($peliculas as $pelicula)
-                    <tr>
+                    <tr class="movie-row-item" data-titulo="{{ strtolower($pelicula->titulo) }}">
                         <td class="td-id">#{{ str_pad($pelicula->id, 4, '0', STR_PAD_LEFT) }}</td>
                         <td class="td-title"><strong>{{ $pelicula->titulo }}</strong></td>
                         <td class="td-genre">{{ $pelicula->genero }}</td>
@@ -52,21 +60,23 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="td-actions-buttons">
-                            <button class="btn-table-action btn-action-edit" onclick="confirmEdit({{ $pelicula->id }})">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                            <button class="btn-table-action btn-action-delete" onclick="confirmDelete({{ $pelicula->id }}, '{{ addslashes($pelicula->titulo) }}')">
-                                <i class="fas fa-trash-alt"></i> Eliminar
-                            </button>
-                            <form action="{{ route('admin.peliculas.destroy', $pelicula) }}" method="POST" style="display: none;" id="form-delete-{{ $pelicula->id }}">
-                                @csrf
-                                @method('DELETE')
-                            </form>
+                        <td class="td-actions-cell">
+                            <div class="actions-wrapper" style="display: flex; gap: 8px; justify-content: center;">
+                                <button class="btn-table-action btn-action-edit" onclick="confirmEdit({{ $pelicula->id }})">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn-table-action btn-action-delete" onclick="confirmDelete({{ $pelicula->id }}, '{{ addslashes($pelicula->titulo) }}')">
+                                    <i class="fas fa-trash-alt"></i> Eliminar
+                                </button>
+                                <form action="{{ route('admin.peliculas.destroy', $pelicula) }}" method="POST" style="display: none;" id="form-delete-{{ $pelicula->id }}">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
-                    <tr>
+                    <tr class="empty-state-row">
                         <td colspan="9" class="td-empty-state">
                             <div class="empty-state-box">
                                 <i class="fas fa-video-slash"></i>
@@ -75,11 +85,20 @@
                         </td>
                     </tr>
                     @endforelse
+                    
+                    <tr id="no_results_row" style="display: none;">
+                        <td colspan="9" style="text-align: center; padding: 4rem 0; color: #6c757d;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <i class="fas fa-search" style="font-size: 2.5rem; color: #2a2e35;"></i>
+                                <span style="font-weight: 600; font-size: 1.05rem;">No se encontraron películas que coincidan con la búsqueda.</span>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             
             @if($peliculas->hasPages())
-                <div class="premium-pagination-box">
+                <div class="premium-pagination-box" id="pagination_wrapper_admin">
                     {{ $peliculas->links() }}
                 </div>
             @endif
@@ -104,6 +123,7 @@
         align-items: center;
         margin-bottom: 3rem;
         gap: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .catalog-main-title {
@@ -125,6 +145,12 @@
         color: #6c757d;
         font-size: 0.98rem;
         margin: 0;
+    }
+
+    .premium-search-input:focus {
+        border-color: #ff4b2b !important;
+        background-color: #111317 !important;
+        box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15) !important;
     }
 
     .btn-add-movie {
@@ -183,13 +209,13 @@
         background-color: #1a1d24 !important;
     }
 
-    .premium-data-table tbody tr:hover td {
+    .premium-data-table tbody tr:hover td:not([colspan]) {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
     }
 
-    .premium-data-table td.td-actions-buttons,
+    .premium-data-table td.td-actions-cell,
     .premium-data-table th:last-child,
     .premium-data-table td:last-child {
         border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
@@ -197,7 +223,7 @@
         box-shadow: none !important;
     }
 
-    .premium-data-table tbody tr:hover td.td-actions-buttons,
+    .premium-data-table tbody tr:hover td.td-actions-cell,
     .premium-data-table tbody tr:hover td:last-child {
         background-color: #222731 !important;
         box-shadow: none !important;
@@ -231,14 +257,6 @@
         background-color: #2ec4b6;
         border-radius: 50%;
         display: inline-block;
-    }
-
-    .td-actions-buttons {
-        display: flex;
-        gap: 0.6rem;
-        justify-content: center;
-        align-items: center;
-        background-color: #1a1d24 !important;
     }
 
     .btn-table-action {
@@ -280,87 +298,133 @@
         box-shadow: 0 4px 12px rgba(211, 47, 47, 0.25);
     }
 
-    .premium-pagination-box {
-        padding: 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #1a1d24;
+        /* ==========================================================================
+    FIX GLOBAL DE PAGINACIÓN PREMIUM (ANTI-APILAMIENTO VERTICAL)
+    ========================================================================== */
+    .premium-pagination-box,
+    [id^="pagination_wrapper"] {
+        padding: 1.5rem !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background-color: #1a1d24 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
+    /* Ocultar por completo los textos basura en inglés descriptivos de Tailwind */
+    .premium-pagination-box div:first-child,
+    .premium-pagination-box p,
+    .premium-pagination-box .text-sm,
+    .premium-pagination-box .hidden,
+    [id^="pagination_wrapper"] div:first-child {
+        display: none !important;
+    }
+
+    /* 🎯 CLAVE: Forzar flex-row horizontal rígido e impedir el salto de línea */
+    .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
-    .premium-pagination-box ul.pagination {
+    .premium-pagination-box ul,
+    .premium-pagination-box .flex,
+    [id^="pagination_wrapper"] div:last-child,
+    [id^="pagination_wrapper"] nav {
         display: flex !important;
         flex-direction: row !important;
-        list-style: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        gap: 6px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important; /* Impide que colapsen hacia abajo */
     }
 
-    .premium-pagination-box .page-item .page-link,
-    .premium-pagination-box .page-link,
-    .premium-pagination-box nav span,
-    .premium-pagination-box nav a {
+    /* Botones e indicadores numéricos estilizados */
+    .premium-pagination-box a,
+    .premium-pagination-box span,
+    [id^="pagination_wrapper"] a,
+    [id^="pagination_wrapper"] span {
         background-color: #111317 !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
         color: #b3b3b3 !important;
-        padding: 8px 14px !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
         text-decoration: none !important;
         display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        margin: 0 !important;
+        min-width: 40px !important;
+        height: 40px !important;
     }
 
-    .premium-pagination-box .page-item:not(.active) .page-link:hover,
-    .premium-pagination-box nav a:hover {
+    /* Efecto Hover */
+    .premium-pagination-box a:hover,
+    [id^="pagination_wrapper"] a:hover {
         background-color: #222731 !important;
         color: #ffffff !important;
         border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .premium-pagination-box .page-item.active .page-link,
-    .premium-pagination-box .active > .page-link,
-    .premium-pagination-box nav span[aria-current="page"] {
+    /* Página activa en degradado MovieSpace */
+    .premium-pagination-box span[aria-current="page"],
+    .premium-pagination-box .active span,
+    [id^="pagination_wrapper"] span[aria-current="page"] {
         background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
         color: #ffffff !important;
         border-color: transparent !important;
-        font-weight: 700 !important;
     }
 
-    .premium-pagination-box .page-item.disabled .page-link,
-    .premium-pagination-box nav span[aria-disabled="true"] {
+    /* Botones deshabilitados */
+    .premium-pagination-box span[aria-disabled="true"],
+    [id^="pagination_wrapper"] span[aria-disabled="true"] {
         background-color: rgba(255, 255, 255, 0.01) !important;
-        color: #4a5262 !important;
+        color: #3a404a !important;
         border-color: rgba(255, 255, 255, 0.02) !important;
-        pointer-events: none;
+        pointer-events: none !important;
     }
 
-    .td-empty-state {
-        padding: 5rem 0 !important;
-        text-align: center;
-    }
-
-    .empty-state-box {
-        color: #495057;
-    }
-
-    .empty-state-box i { font-size: 3rem; margin-bottom: 1rem; }
-    .empty-state-box p { font-size: 1.1rem; font-weight: 600; margin: 0; }
-
-    @media (max-width: 768px) {
-        .catalog-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        .btn-add-movie { width: 100%; justify-content: center; }
+    /* Ajuste de flechas SVG nativas */
+    .premium-pagination-box svg,
+    [id^="pagination_wrapper"] svg {
+        width: 16px !important;
+        height: 16px !important;
+        fill: currentColor !important;
     }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search_pelicula_admin');
+    const movieRows = document.querySelectorAll('.movie-row-item');
+    const noResultsRow = document.getElementById('no_results_row');
+    const paginationWrapper = document.getElementById('pagination_wrapper_admin');
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        let visibleRows = 0;
+
+        movieRows.forEach(row => {
+            const titulo = row.getAttribute('data-titulo');
+            if (titulo.includes(term)) {
+                row.style.display = 'table-row';
+                visibleRows++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (visibleRows === 0 && term !== '') {
+            noResultsRow.style.display = 'table-row';
+            if (paginationWrapper) paginationWrapper.style.display = 'none';
+        } else {
+            noResultsRow.style.display = 'none';
+            if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        }
+    });
+});
+
 function confirmEdit(id) {
     Swal.fire({
         title: '¿Modificar Registro?',

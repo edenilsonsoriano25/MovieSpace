@@ -58,7 +58,7 @@
                         @foreach($peliculas as $pelicula)
                         <div class="pelicula-premium-checkbox" data-titulo="{{ strtolower($pelicula->titulo) }}">
                             <label class="checkbox-interactive-label">
-                                <input type="checkbox" name="peliculas[]" value="{{ $pelicula->id }}">
+                                <input type="checkbox" name="peliculas[]" value="{{ $pelicula->id }}" {{ request('pelicula_id') == $pelicula->id ? 'checked' : '' }}>
                                 <span class="checkbox-custom-indicator"></span>
                                 
                                 <div class="cd-media-wrapper">
@@ -305,7 +305,7 @@
         top: 50%;
         transform: translateY(-50%);
         color: #6c757d;
-        font-size: 0.9rem;
+        font-size: 0.9------rem;
     }
 
     .customer-list-container {
@@ -552,7 +552,6 @@
         box-shadow: 0 6px 18px rgba(46, 196, 182, 0.3);
     }
 
-    /* Estilo para el input de búsqueda cuando tiene un cliente seleccionado */
     .premium-search-input.cliente-seleccionado {
         border-color: #2ec4b6;
         background-color: #1a2a2a;
@@ -574,17 +573,15 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 🔍 1. Lógica del Buscador de Clientes Dinámico - CON SELECCIÓN VISIBLE
+    // 🔍 1. Lógica del Buscador de Clientes Dinámico
     const searchCliente = document.getElementById('search_cliente');
     const selectCliente = document.getElementById('id_usuario');
     const optionsCliente = selectCliente.querySelectorAll('option');
 
-    // Mostrar todos los clientes inicialmente
     optionsCliente.forEach(option => {
         option.style.display = 'block';
     });
 
-    // Función para actualizar el input de búsqueda con el cliente seleccionado
     function actualizarInputConClienteSeleccionado() {
         const selectedOption = selectCliente.options[selectCliente.selectedIndex];
         if (selectedOption && selectedOption.value) {
@@ -593,7 +590,6 @@ document.addEventListener('DOMContentLoaded', function() {
             searchCliente.value = `${nombreCliente} — ${emailCliente}`;
             searchCliente.classList.add('cliente-seleccionado');
             
-            // Opcional: Mostrar un pequeño indicador visual
             searchCliente.style.borderColor = '#2ec4b6';
             searchCliente.style.backgroundColor = '#1a2a2a';
             searchCliente.style.color = '#2ec4b6';
@@ -606,25 +602,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Evento cuando se selecciona una opción del select
     selectCliente.addEventListener('change', function() {
         actualizarInputConClienteSeleccionado();
         
-        // Limpiar filtro de búsqueda y mostrar todos los clientes
         searchCliente.value = '';
         optionsCliente.forEach(option => {
             option.style.display = 'block';
         });
         
-        // Volver a poner el valor del cliente seleccionado en el input
         actualizarInputConClienteSeleccionado();
     });
 
-    // Filtrar clientes mientras se escribe en la búsqueda
     searchCliente.addEventListener('input', function(e) {
         const term = e.target.value.toLowerCase().trim();
         
-        // Si el buscador tiene texto, remover la clase de seleccionado
         if (term !== '') {
             searchCliente.classList.remove('cliente-seleccionado');
             searchCliente.style.borderColor = '';
@@ -633,15 +624,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (term === '') {
-            // Si está vacío, mostrar todos y resetear selección
             optionsCliente.forEach(option => {
                 option.style.display = 'block';
             });
-            // No resetear la selección automáticamente para no perder el cliente elegido
             return;
         }
 
-        // Filtrar opciones según el término de búsqueda
         let hayCoincidencias = false;
         optionsCliente.forEach(option => {
             const searchData = option.getAttribute('data-search');
@@ -652,17 +640,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.style.display = 'none';
             }
         });
-        
-        // Si hay una sola coincidencia y el usuario presiona Enter, seleccionarla automáticamente
-        const opcionesVisibles = Array.from(optionsCliente).filter(opt => opt.style.display !== 'none');
-        if (opcionesVisibles.length === 1 && opcionesVisibles[0].value) {
-            // Auto-seleccionar la única coincidencia (opcional)
-            // selectCliente.value = opcionesVisibles[0].value;
-            // actualizarInputConClienteSeleccionado();
-        }
     });
 
-    // Permitir seleccionar con Enter después de buscar
     searchCliente.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -671,13 +650,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectCliente.value = opcionesVisibles[0].value;
                 actualizarInputConClienteSeleccionado();
             } else if (opcionesVisibles.length > 1) {
-                // Mostrar un pequeño mensaje o simplemente hacer foco en el select
                 selectCliente.focus();
             }
         }
     });
 
-    // Si ya hay un cliente seleccionado por defecto (por ejemplo, después de un error de validación)
     if (selectCliente.value) {
         actualizarInputConClienteSeleccionado();
     }

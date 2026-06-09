@@ -10,7 +10,7 @@ class PeliculaController extends Controller
 {
     public function index()
     {
-        $peliculas = Pelicula::orderBy('created_at', 'desc')->get();
+        $peliculas = Pelicula::orderBy('id', 'desc')->paginate(10);
         return view('peliculas.index', compact('peliculas'));
     }
 

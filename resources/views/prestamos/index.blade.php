@@ -11,9 +11,17 @@
                 <h1 class="loans-main-title"><i class="fas fa-exchange-alt"></i> Gestión de Préstamos</h1>
                 <p class="loans-main-subtitle">Supervisa todas las salidas de CDs, controla las fechas de expiración, aplica recargos por mora y gestiona las recepciones en mostrador.</p>
             </div>
-            <a href="{{ route('prestamos.create') }}" class="btn-premium-action btn-add-loan">
-                <i class="fas fa-plus"></i> Nuevo Préstamo
-            </a>
+            
+            <div class="header-controls-group" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div class="premium-input-search-wrapper" style="position: relative; width: 300px;">
+                    <i class="fas fa-search search-input-icon" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                    <input type="text" id="search_prestamo_cliente" placeholder="Buscar préstamo por cliente..." class="premium-search-input" style="width: 100%; padding: 12px 16px 12px 42px; background-color: #1a1d24; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; color: #ffffff; font-size: 0.92rem; outline: none; transition: all 0.2s ease;" autocomplete="off">
+                </div>
+
+                <a href="{{ route('prestamos.create') }}" class="btn-premium-action btn-add-loan">
+                    <i class="fas fa-plus"></i> Nuevo Préstamo
+                </a>
+            </div>
         </div>
 
         <div class="loans-stats-grid">
@@ -51,7 +59,7 @@
         </div>
 
         <div class="premium-table-wrapper">
-            <table class="premium-data-table">
+            <table class="premium-data-table" id="loans_table_admin">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -66,7 +74,7 @@
                 </thead>
                 <tbody>
                     @foreach($prestamos as $prestamo)
-                    <tr>
+                    <tr class="loan-row-item" data-cliente="{{ strtolower($prestamo->usuario->name) }}">
                         <td class="td-id">#{{ str_pad($prestamo->id, 5, '0', STR_PAD_LEFT) }}</td>
                         <td class="td-client">
                             <strong>{{ $prestamo->usuario->name }}</strong><br>
@@ -85,13 +93,13 @@
                             @endif
                         </td>
                         <td>
-                            @if($prestamo->estado_prestamo == 'pendiente')
-                                <span class="status-pill status-pill-pending">
-                                    <i class="fas fa-hourglass-half"></i> Pendiente
-                                </span>
-                            @elseif($prestamo->estado_prestamo == 'activo')
+                            @if($prestamo->estado_prestamo == 'activo')
                                 <span class="status-pill status-pill-active">
                                     <span class="pulse-dot"></span> Activo
+                                </span>
+                            @elseif($prestamo->estado_prestamo == 'pendiente')
+                                <span class="status-pill status-pill-pending">
+                                    <i class="fas fa-hourglass-half"></i> Pendiente
                                 </span>
                             @elseif($prestamo->estado_prestamo == 'rechazado')
                                 <span class="status-pill status-pill-rejected">
@@ -107,7 +115,7 @@
                             ${{ number_format($prestamo->multa_total, 2) }}
                         </td>
                         <td class="td-actions-cell">
-                            <div class="actions-wrapper">
+                            <div class="actions-wrapper" style="display: flex; gap: 8px; justify-content: center;">
                                 @if($prestamo->estado_prestamo == 'pendiente')
                                     <button class="btn-loan-action btn-action-pending" onclick="verDetallePendiente({{ $prestamo->id }})">
                                         <i class="fas fa-eye"></i> Ver Solicitud
@@ -140,11 +148,20 @@
                         </td>
                     </tr>
                     @endforeach
+                    
+                    <tr id="no_loans_results_row" style="display: none;">
+                        <td colspan="8" style="text-align: center; padding: 4rem 0; color: #6c757d;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <i class="fas fa-search" style="font-size: 2.5rem; color: #2a2e35;"></i>
+                                <span style="font-weight: 600; font-size: 1.05rem;">No se encontraron préstamos asociados a ese cliente.</span>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             
             @if($prestamos->hasPages())
-                <div class="premium-pagination-box">
+                <div class="premium-pagination-box" id="pagination_wrapper_loans">
                     {{ $prestamos->links() }}
                 </div>
             @endif
@@ -169,6 +186,7 @@
         align-items: center;
         margin-bottom: 3rem;
         gap: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .loans-main-title {
@@ -190,6 +208,12 @@
         color: #6c757d;
         font-size: 0.98rem;
         margin: 0;
+    }
+
+    .premium-search-input:focus {
+        border-color: #ff4b2b !important;
+        background-color: #111317 !important;
+        box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15) !important;
     }
 
     .btn-add-loan {
@@ -292,7 +316,7 @@
         background-color: #1a1d24 !important;
     }
 
-    .premium-data-table tbody tr:hover td {
+    .premium-data-table tbody tr:hover td:not([colspan]) {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
@@ -368,14 +392,6 @@
 
     .text-danger-fine { color: #ef5350 !important; font-weight: 700; font-family: monospace; }
     .text-fine-zero { color: #495057; font-family: monospace; }
-
-    .actions-wrapper {
-        display: flex !important;
-        gap: 0.5rem;
-        justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-    }
 
     .btn-loan-action {
         border: none;
@@ -454,64 +470,114 @@
         color: #ffffff !important;
     }
 
-    .premium-pagination-box {
-        padding: 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.04);
+    /* ==========================================================================
+       🛡️ SINCRO DE PAGINACIÓN ADAPTADO EXACTO DESDE EL MODELO DEL CATÁLOGO
+       ========================================================================== */
+    .premium-pagination-box,
+    [id^="pagination_wrapper"] {
+        padding: 1.5rem !important;
         display: flex !important;
         justify-content: center !important;
         align-items: center !important;
         background-color: #1a1d24 !important;
         width: 100% !important;
-        box-sizing: border-box;
+        box-sizing: border-box !important;
     }
 
+    /* Parche para romper el colapso vertical en cascada del DOM de Laravel */
+    .premium-pagination-box div:first-child,
+    .premium-pagination-box p,
+    .premium-pagination-box .text-sm,
+    .premium-pagination-box .hidden,
+    [id^="pagination_wrapper"] div:first-child {
+        display: none !important;
+    }
+
+    /* Fuerza la orientación horizontal en los contenedores nativos generados */
+    .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
-    .premium-pagination-box ul.pagination {
+    .premium-pagination-box ul,
+    .premium-pagination-box .flex,
+    [id^="pagination_wrapper"] div:last-child,
+    [id^="pagination_wrapper"] nav {
         display: flex !important;
         flex-direction: row !important;
-        list-style: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        gap: 6px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
     }
 
-    .premium-pagination-box .page-item .page-link,
+    /* Forzar comportamiento en línea para listas de Bootstrap/Tailwind */
+    .premium-pagination-box li,
+    .premium-pagination-box .page-item,
+    [id^="pagination_wrapper"] li {
+        display: inline-flex !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Botoneras premium individuales cuadradas */
+    .premium-pagination-box a,
+    .premium-pagination-box span,
     .premium-pagination-box .page-link,
-    .premium-pagination-box nav span,
-    .premium-pagination-box nav a {
+    [id^="pagination_wrapper"] a,
+    [id^="pagination_wrapper"] span {
         background-color: #111317 !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
         color: #b3b3b3 !important;
-        padding: 8px 14px !important;
-        border-radius: 6px !important;
-        font-weight: 600 !important;
-        font-size: 0.88rem !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
         text-decoration: none !important;
         display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        margin: 0 !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        box-sizing: border-box !important;
     }
 
-    .premium-pagination-box .page-item:not(.active) .page-link:hover,
-    .premium-pagination-box nav a:hover {
+    .premium-pagination-box a:hover,
+    .premium-pagination-box .page-link:hover,
+    [id^="pagination_wrapper"] a:hover {
         background-color: #222731 !important;
         color: #ffffff !important;
         border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .premium-pagination-box .page-item.active .page-link,
-    .premium-pagination-box .active > .page-link,
-    .premium-pagination-box nav span[aria-current="page"] {
+    .premium-pagination-box span[aria-current="page"],
+    .premium-pagination-box .active span,
+    .premium-pagination-box .active .page-link,
+    [id^="pagination_wrapper"] span[aria-current="page"] {
         background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
         color: #ffffff !important;
         border-color: transparent !important;
-        font-weight: 700 !important;
+    }
+
+    .premium-pagination-box span[aria-disabled="true"],
+    .premium-pagination-box .disabled .page-link,
+    [id^="pagination_wrapper"] span[aria-disabled="true"] {
+        background-color: rgba(255, 255, 255, 0.01) !important;
+        color: #3a404a !important;
+        border-color: rgba(255, 255, 255, 0.02) !important;
+        pointer-events: none !important;
+    }
+
+    .premium-pagination-box svg,
+    [id^="pagination_wrapper"] svg {
+        width: 16px !important;
+        height: 16px !important;
+        fill: currentColor !important;
     }
 
     @media (max-width: 768px) {
         .loans-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        .btn-add-loan { width: 100%; justify-content: center; }
+        .btn-add-loan, .premium-input-search-wrapper { width: 100% !important; }
+        .header-controls-group { width: 100%; }
         .actions-wrapper { flex-direction: column; }
         .btn-loan-action { width: 100%; justify-content: center; }
     }
@@ -519,6 +585,36 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search_prestamo_cliente');
+    const loanRows = document.querySelectorAll('.loan-row-item');
+    const noResultsRow = document.getElementById('no_loans_results_row');
+    const paginationWrapper = document.getElementById('pagination_wrapper_loans');
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        let visibleRows = 0;
+
+        loanRows.forEach(row => {
+            const cliente = row.getAttribute('data-cliente');
+            if (cliente.includes(term)) {
+                row.style.display = 'table-row';
+                visibleRows++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (visibleRows === 0 && term !== '') {
+            noResultsRow.style.display = 'table-row';
+            if (paginationWrapper) paginationWrapper.style.display = 'none';
+        } else {
+            noResultsRow.style.display = 'none';
+            if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        }
+    });
+});
+
 function confirmDevolucion(id) {
     Swal.fire({
         title: '¿Registrar devolución?',
@@ -554,14 +650,14 @@ function verDetallePendiente(id) {
     });
 }
 
-function verDetalle(id, cliente, email, peliculas, salida, limite, estado, multa) {
+function verDetalle(id, cliente, email, peliList, salida, limite, estado, multa) {
     let estadoBadge = '';
     if (estado === 'pendiente') {
         estadoBadge = '<span style="color: #ce93d8; font-weight: bold; text-transform: uppercase;"><i class="fas fa-hourglass-half"></i> Pendiente</span>';
     } else if (estado === 'activo') {
         estadoBadge = '<span style="color: #2ec4b6; font-weight: bold; text-transform: uppercase;"><span class="pulse-dot" style="display: inline-block; margin-right: 5px;"></span> Activo</span>';
     } else if (estado === 'rechazado') {
-        estadoBadge = '<span style="color: #ef5350; font-weight: bold; text-transform: uppercase;"><i class="fas fa-times-circle"></i> Rechazado</span>';
+        estadoBadge = '<span style="color: #ef5350; font-weight: bold; text-transform: uppercase;"><i class="fas fa-times-circle"></i>  Rechazado</span>';
     } else {
         estadoBadge = '<span style="color: #8a8a8a; font-weight: bold; text-transform: uppercase;"><i class="fas fa-check-circle"></i> Devuelto</span>';
     }
@@ -580,7 +676,7 @@ function verDetalle(id, cliente, email, peliculas, salida, limite, estado, multa
                 </tr>
                 <tr>
                     <td class="swal-label">Películas:</td>
-                    <td class="swal-value" style="color: #ff416c; font-weight: 600;">${peliculas}</td>
+                    <td class="swal-value" style="color: #ff416c; font-weight: 600;">${peliList}</td>
                 </tr>
                 <tr>
                     <td class="swal-label">F. Salida:</td>

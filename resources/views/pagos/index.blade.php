@@ -117,7 +117,7 @@
     .cash-history-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -174,7 +174,6 @@
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* REJILLA DE TARJETAS DE MÉTRICAS ANALÍTICAS (STATS) */
     .cash-stats-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
@@ -219,7 +218,6 @@
     .stat-number { font-size: 1.6rem; font-weight: 800; color: #fff; margin: 0; }
     .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
 
-    /* CONTENEDOR DE LA DATA-TABLE */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -264,17 +262,15 @@
         color: #b3b3b3;
         font-size: 0.95rem;
         vertical-align: middle;
-        background-color: #1a1d24 !important; /* Blindaje de fondo */
+        background-color: #1a1d24 !important;
     }
 
-    /* Resaltado de fila en hover */
     .premium-data-table tbody tr:hover td {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
     }
 
-    /* BLINDAJE INTEGRAL CONTRA COLAPSO Y LÍNEAS BLANCAS EN LA ÚLTIMA COLUMNA */
     .premium-data-table th:last-child,
     .premium-data-table td:last-child {
         border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
@@ -292,7 +288,6 @@
     .td-username { color: #ffffff; }
     .td-date { color: #8a8a8a; font-size: 0.9rem; font-family: monospace; }
 
-    /* Conceptos Badges */
     .badge-concept-pill {
         font-size: 0.76rem;
         font-weight: 700;
@@ -305,13 +300,11 @@
     .concept-pill-success { background-color: rgba(46, 196, 182, 0.12); color: #2ec4b6; }
     .concept-pill-warning { background-color: rgba(255, 152, 0, 0.12); color: #ffb74d; }
 
-    /* Textos colorizados por método de pago */
     .payment-badge-text { font-weight: 600; font-size: 0.92rem; }
     .text-teal { color: #2ec4b6; }
     .text-blue { color: #2196f3; }
     .text-purple { color: #b57cff; }
 
-    /* Estado de Pago Exitoso */
     .td-status-completed { text-align: center; }
     
     .status-inner-box {
@@ -331,9 +324,6 @@
         border-radius: 50%;
     }
 
-    /* ==========================================================================
-       🔥 ULTRA-FIX CONTRA PAGINACIÓN APILADA EN INGLÉS (TAILWIND OVERRIDE)
-       ========================================================================== */
     .premium-pagination-box {
         padding: 1.5rem;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -345,7 +335,6 @@
         box-sizing: border-box;
     }
 
-    /* Ocultar por completo textos en inglés redundantes de Tailwind */
     .premium-pagination-box div:first-child,
     .premium-pagination-box p,
     .premium-pagination-box .text-sm,
@@ -353,7 +342,6 @@
         display: none !important;
     }
 
-    /* Alinear en fila horizontal limpia */
     .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
     .premium-pagination-box flex,
@@ -365,7 +353,6 @@
         gap: 8px !important;
     }
 
-    /* Formato de botones numéricos */
     .premium-pagination-box a,
     .premium-pagination-box span {
         background-color: #111317 !important;
@@ -390,7 +377,6 @@
         border-color: rgba(255, 255, 255, 0.15) !important;
     }
 
-    /* Gradiente en la página activa actual */
     .premium-pagination-box span[aria-current="page"],
     .premium-pagination-box .bg-blue-600 {
         background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;

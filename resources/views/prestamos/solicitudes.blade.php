@@ -11,13 +11,21 @@
                 <h1 class="loans-main-title"><i class="fas fa-paper-plane"></i> Solicitudes de Alquiler</h1>
                 <p class="loans-main-subtitle">Revisa las solicitudes enviadas por clientes. Aprueba o rechaza según disponibilidad.</p>
             </div>
-            <a href="{{ route('prestamos.index') }}" class="btn-premium-back">
-                <i class="fas fa-arrow-left"></i> Ver Préstamos Activos
-            </a>
+            
+            <div class="header-controls-group" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div class="premium-input-search-wrapper" style="position: relative; width: 300px;">
+                    <i class="fas fa-search search-input-icon" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #6c757d; font-size: 0.9rem;"></i>
+                    <input type="text" id="search_solicitud_cliente" placeholder="Buscar solicitud por cliente..." class="premium-search-input" style="width: 100%; padding: 12px 16px 12px 42px; background-color: #1a1d24; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 10px; color: #ffffff; font-size: 0.92rem; outline: none; transition: all 0.2s ease;" autocomplete="off">
+                </div>
+
+                <a href="{{ route('prestamos.index') }}" class="btn-premium-back">
+                    <i class="fas fa-arrow-left"></i> Ver Préstamos Activos
+                </a>
+            </div>
         </div>
 
         <div class="premium-table-wrapper">
-            <table class="premium-data-table">
+            <table class="premium-data-table" id="solicitudes_table_admin">
                 <thead>
                     <tr>
                         <th>ID Solicitud</th>
@@ -35,7 +43,7 @@
                             $detalle = $solicitud->detalles->first();
                             $pelicula = $detalle ? $detalle->pelicula : null;
                         @endphp
-                        <tr>
+                        <tr class="solicitud-row-item" data-cliente="{{ strtolower($solicitud->usuario->name) }}">
                             <td class="td-id">#{{ str_pad($solicitud->id, 5, '0', STR_PAD_LEFT) }}</td>
                             <td class="td-client">
                                 <strong>{{ $solicitud->usuario->name }}</strong><br>
@@ -89,8 +97,23 @@
                             </td>
                         </tr>
                     @endforelse
+
+                    <tr id="no_solicitudes_results_row" style="display: none;">
+                        <td colspan="7" style="text-align: center; padding: 4rem 0; color: #6c757d;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                                <i class="fas fa-search" style="font-size: 2.5rem; color: #2a2e35;"></i>
+                                <span style="font-weight: 600; font-size: 1.05rem;">No se encontraron solicitudes asociadas a ese cliente.</span>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
+
+            @if(method_exists($solicitudes, 'hasPages') && $solicitudes->hasPages())
+                <div class="premium-pagination-box" id="pagination_wrapper_admin">
+                    {{ $solicitudes->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </div>
@@ -111,6 +134,7 @@
         align-items: center;
         margin-bottom: 3rem;
         gap: 1.5rem;
+        flex-wrap: wrap;
     }
 
     .loans-main-title {
@@ -132,6 +156,24 @@
         color: #6c757d;
         font-size: 0.98rem;
         margin: 0;
+    }
+
+    .premium-search-input {
+        width: 100%;
+        padding: 12px 16px 12px 42px;
+        background-color: #1a1d24;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 0.92rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .premium-search-input:focus {
+        border-color: #ff4b2b !important;
+        background-color: #111317 !important;
+        box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15) !important;
     }
 
     .btn-premium-back {
@@ -190,7 +232,7 @@
         background-color: #1a1d24 !important;
     }
 
-    .premium-data-table tbody tr:hover td {
+    .premium-data-table tbody tr:hover td:not([colspan]) {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
@@ -289,20 +331,113 @@
         justify-content: center;
         gap: 1rem;
     }
-    .empty-icon {
-        font-size: 3rem;
-        color: #3a404a;
+    .empty-icon { font-size: 3rem; color: #3a404a; }
+    .empty-text { color: #6c757d; font-size: 1.05rem; margin: 0; font-weight: 600; }
+
+    /* ==========================================================================
+       🔥 MODELO DE REGLAS DE PAGINACIÓN ADAPTADO EXACTO DESDE EL CATÁLOGO
+       ========================================================================== */
+    .premium-pagination-box,
+    [id^="pagination_wrapper"] {
+        padding: 1.5rem !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        background-color: #1a1d24 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
-    .empty-text {
-        color: #6c757d;
-        font-size: 1.05rem;
-        margin: 0;
-        font-weight: 600;
+
+    .premium-pagination-box div:first-child,
+    .premium-pagination-box p,
+    .premium-pagination-box .text-sm,
+    .premium-pagination-box .hidden,
+    [id^="pagination_wrapper"] div:first-child {
+        display: none !important;
+    }
+
+    .premium-pagination-box div:last-child,
+    .premium-pagination-box nav,
+    .premium-pagination-box ul,
+    .premium-pagination-box .flex,
+    [id^="pagination_wrapper"] div:last-child,
+    [id^="pagination_wrapper"] nav {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .premium-pagination-box li,
+    .premium-pagination-box .page-item,
+    [id^="pagination_wrapper"] li {
+        display: inline-flex !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .premium-pagination-box a,
+    .premium-pagination-box span,
+    .premium-pagination-box .page-link,
+    [id^="pagination_wrapper"] a,
+    [id^="pagination_wrapper"] span {
+        background-color: #111317 !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #b3b3b3 !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.9rem !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        margin: 0 !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        box-sizing: border-box !important;
+    }
+
+    .premium-pagination-box a:hover,
+    .premium-pagination-box .page-link:hover,
+    [id^="pagination_wrapper"] a:hover {
+        background-color: #222731 !important;
+        color: #ffffff !important;
+        border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    .premium-pagination-box span[aria-current="page"],
+    .premium-pagination-box .active span,
+    .premium-pagination-box .active .page-link,
+    [id^="pagination_wrapper"] span[aria-current="page"] {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+
+    .premium-pagination-box span[aria-disabled="true"],
+    .premium-pagination-box .disabled .page-link,
+    [id^="pagination_wrapper"] span[aria-disabled="true"] {
+        background-color: rgba(255, 255, 255, 0.01) !important;
+        color: #3a404a !important;
+        border-color: rgba(255, 255, 255, 0.02) !important;
+        pointer-events: none !important;
+    }
+
+    .premium-pagination-box svg,
+    [id^="pagination_wrapper"] svg {
+        width: 16px !important;
+        height: 16px !important;
+        fill: currentColor !important;
     }
 
     @media (max-width: 768px) {
         .loans-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-        .btn-premium-back { width: 100%; justify-content: center; }
+        .btn-premium-back, .premium-input-search-wrapper { width: 100% !important; }
+        .header-controls-group { width: 100%; }
         .actions-wrapper { flex-direction: column; width: 100%; }
         .btn-loan-action { width: 100%; justify-content: center; }
     }
@@ -310,6 +445,37 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+// LÓGICA DEL BUSCADOR REACTIVO POR NOMBRE DE CLIENTE
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search_solicitud_cliente');
+    const rows = document.querySelectorAll('.solicitud-row-item');
+    const noResultsRow = document.getElementById('no_solicitudes_results_row');
+    const paginationWrapper = document.getElementById('pagination_wrapper_admin');
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        let visibleRows = 0;
+
+        rows.forEach(row => {
+            const cliente = row.getAttribute('data-cliente');
+            if (cliente.includes(term)) {
+                row.style.display = 'table-row';
+                visibleRows++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (visibleRows === 0 && term !== '') {
+            noResultsRow.style.display = 'table-row';
+            if (paginationWrapper) paginationWrapper.style.display = 'none';
+        } else {
+            noResultsRow.style.display = 'none';
+            if (paginationWrapper) paginationWrapper.style.display = 'flex';
+        }
+    });
+});
+
 function aprobarSolicitud(id) {
     Swal.fire({
         title: '¿Aprobar solicitud?',
