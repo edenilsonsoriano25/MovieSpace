@@ -9,8 +9,8 @@
         <div class="client-page-header">
             <div class="header-left">
                 <span class="header-badge"><i class="fas fa-user-shield"></i> Panel de Afiliado</span>
-                <h1 class="client-main-title"><i class="fas fa-history"></i> Mi Historial de Alquileres</h1>
-                <p class="client-main-subtitle">Revisa el estado de tus películas apartadas, controla tus fechas límite de devolución y audita tus pagos efectuados.</p>
+                <h1 class="client-main-title"><i class="fas fa-history"></i> Mis Solicitudes y Alquileres</h1>
+                <p class="client-main-subtitle">Revisa el estado de tus solicitudes, películas apartadas y controla tus fechas límite de devolución.</p>
             </div>
             <a href="{{ route('peliculas.index') }}" class="btn-premium-back">
                 <i class="fas fa-film"></i> Volver a la Cartelera
@@ -19,47 +19,73 @@
 
         <div class="premium-table-wrapper">
             <div class="table-premium-header">
-                <h3><i class="fas fa-disc"></i> Registro de Copias Físicas</h3>
+                <h3><i class="fas fa-disc"></i> Registro de Solicitudes y Copias Físicas</h3>
             </div>
             
             <table class="premium-data-table">
                 <thead>
                     <tr>
                         <th>Código Folio</th>
-                        <th>Películas Alquiladas</th>
-                        <th>Fecha de Salida</th>
-                        <th>Fecha Límite de Entrega</th>
-                        <th>Estado de la Copia</th>
-                        <th style="text-align: right;">Cargos / Multas</th>
+                        <th>Película</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Fecha Límite</th>
+                        <th>Estado</th>
+                        <th style="text-align: right;">Monto / Multas</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($prestamos as $prestamo)
+                    @php
+                        $detalle = $prestamo->detalles->first();
+                        $pelicula = $detalle ? $detalle->pelicula : null;
+                    @endphp
                     <tr>
                         <td class="td-id">#{{ str_pad($prestamo->id, 5, '0', STR_PAD_LEFT) }}</td>
                         <td class="td-movies">
-                            <div class="movies-pill-container">
-                                @foreach($prestamo->detalles as $detalle)
-                                    <span class="badge-movie-pill"><i class="fas fa-ticket"></i> {{ $detalle->pelicula->titulo }}</span>
-                                @endforeach
-                            </div>
+                            @if($pelicula)
+                                <span class="badge-movie-pill"><i class="fas fa-ticket"></i> {{ $pelicula->titulo }}</span>
+                                <br>
+                                <small class="text-muted-email">${{ number_format($detalle->precio_alquiler_momento ?? 0, 2) }}/día</small>
+                            @else
+                                <span class="badge-movie-pill">Película no disponible</span>
+                            @endif
                         </td>
-                        <td class="td-date">{{ \Carbon\Carbon::parse($prestamo->fecha_salida)->format('d/m/Y') }}</td>
-                        <td class="td-date-limit {{ now()->gt($prestamo->fecha_limite) && $prestamo->estado_prestamo == 'activo' ? 'limit-overdue' : '' }}">
-                            <span>{{ \Carbon\Carbon::parse($prestamo->fecha_limite)->format('d/m/Y') }}</span>
-                            @if(now()->gt($prestamo->fecha_limite) && $prestamo->estado_prestamo == 'activo')
-                                <span class="badge-danger-pill">Vencido</span>
+                        <td class="td-date">{{ \Carbon\Carbon::parse($prestamo->created_at)->format('d/m/Y H:i') }}</td>
+                        <td class="td-date-limit">
+                            @if($prestamo->estado_prestamo == 'pendiente')
+                                <span class="text-muted">Pendiente de aprobación</span>
+                            @else
+                                {{ \Carbon\Carbon::parse($prestamo->fecha_limite)->format('d/m/Y') }}
+                                @if(now()->gt($prestamo->fecha_limite) && $prestamo->estado_prestamo == 'activo')
+                                    <span class="badge-danger-pill">Vencido</span>
+                                @endif
                             @endif
                         </td>
                         <td>
-                            @if($prestamo->estado_prestamo == 'activo')
-                                <span class="status-pill status-pill-active"><span class="pulse-dot"></span> En mi posesión</span>
+                            @if($prestamo->estado_prestamo == 'pendiente')
+                                <span class="status-pill status-pill-pending">
+                                    <i class="fas fa-clock"></i> Pendiente de aprobación
+                                </span>
+                            @elseif($prestamo->estado_prestamo == 'rechazado')
+                                <span class="status-pill status-pill-rejected">
+                                    <i class="fas fa-times-circle"></i> Rechazado
+                                </span>
+                            @elseif($prestamo->estado_prestamo == 'activo')
+                                <span class="status-pill status-pill-active">
+                                    <span class="pulse-dot"></span> En mi posesión
+                                </span>
                             @else
-                                <span class="status-pill status-pill-completed"><i class="fas fa-check-circle"></i> Devuelto a Tienda</span>
+                                <span class="status-pill status-pill-completed">
+                                    <i class="fas fa-check-circle"></i> Devuelto a Tienda
+                                </span>
                             @endif
                         </td>
-                        <td class="td-fine {{ $prestamo->multa_total > 0 ? 'text-danger-fine' : 'text-fine-zero' }}">
-                            ${{ number_format($prestamo->multa_total, 2) }}
+                        <td class="td-fine {{ $prestamo->multa_total > 0 ? 'text-danger-fine' : 'text-fine-zero' }}" style="text-align: right;">
+                            @if($prestamo->estado_prestamo == 'pendiente')
+                                <span class="text-muted">Pendiente de pago</span>
+                            @else
+                                ${{ number_format($prestamo->multa_total, 2) }}
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -67,7 +93,7 @@
                         <td colspan="6" class="td-empty-state">
                             <div class="empty-state-box">
                                 <i class="fas fa-coins"></i>
-                                <p>Aún no has realizado ningún alquiler de películas físicas en esta sucursal.</p>
+                                <p>Aún no has realizado ninguna solicitud de alquiler.</p>
                                 <a href="{{ route('peliculas.index') }}" class="btn-explore-now">Explorar Cartelera</a>
                             </div>
                         </td>
@@ -161,7 +187,6 @@
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* DATA-TABLE OSCURA */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -202,24 +227,10 @@
         background-color: #222731 !important; color: #ffffff !important;
     }
 
-    /* Blindaje de última columna */
-    .premium-data-table th:last-child,
-    .premium-data-table td:last-child {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
-        background-color: #1a1d24 !important;
-        box-shadow: none !important;
-    }
-
-    .premium-data-table tbody tr:hover td:last-child {
-        background-color: #222731 !important;
-    }
-
     .td-id { font-family: monospace; color: #ff4b2b !important; font-weight: 600; }
     .td-date { color: #cdcdcd; font-family: monospace; }
     .td-date-limit { font-family: monospace; }
 
-    .limit-overdue { color: #ef5350 !important; font-weight: 700; }
-    
     .badge-danger-pill {
         background-color: rgba(244, 67, 54, 0.15); color: #ef5350;
         padding: 2px 6px; border-radius: 4px; font-size: 0.72rem;
@@ -238,6 +249,8 @@
         border-radius: 6px; display: inline-flex; align-items: center;
         gap: 5px; text-transform: uppercase;
     }
+    .status-pill-pending { background-color: rgba(255, 152, 0, 0.12); color: #ffb74d; }
+    .status-pill-rejected { background-color: rgba(244, 67, 54, 0.12); color: #ef5350; }
     .status-pill-active { background-color: rgba(46, 196, 182, 0.12); color: #2ec4b6; }
     .status-pill-completed { background-color: rgba(108, 117, 125, 0.15); color: #8a8a8a; }
 
@@ -246,10 +259,11 @@
         border-radius: 50%; display: inline-block;
     }
 
-    .text-danger-fine { color: #ef5350 !important; font-weight: 700; font-family: monospace; text-align: right; }
-    .text-fine-zero { color: #495057; font-family: monospace; text-align: right; }
+    .text-danger-fine { color: #ef5350 !important; font-weight: 700; font-family: monospace; }
+    .text-fine-zero { color: #495057; font-family: monospace; }
+    .text-muted { color: #6c757d; }
+    .text-muted-email { color: #6c757d; font-size: 0.75rem; }
 
-    /* ESTADO VACÍO */
     .td-empty-state { padding: 5rem 0 !important; text-align: center; }
     .empty-state-box { color: #6c757d; }
     .empty-state-box i { font-size: 3rem; margin-bottom: 1rem; color: #3a404a; }
@@ -263,56 +277,12 @@
     }
     .btn-explore-now:hover { background-color: #222731; }
 
-    /* ==========================================================================
-       🔥 ULTRA-FIX CONTRA PAGINACIÓN APILADA EN INGLÉS
-       ========================================================================== */
     .premium-pagination-box {
         padding: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.04);
         display: flex !important; justify-content: center !important;
         align-items: center !important; background-color: #1a1d24 !important;
         width: 100% !important; box-sizing: border-box;
     }
-
-    .premium-pagination-box div:first-child,
-    .premium-pagination-box p,
-    .premium-pagination-box .text-sm,
-    .premium-pagination-box .hidden {
-        display: none !important;
-    }
-
-    .premium-pagination-box div:last-child,
-    .premium-pagination-box nav,
-    .premium-pagination-box flex,
-    .premium-pagination-box .flex {
-        display: flex !important; flex-direction: row !important;
-        justify-content: center !important; align-items: center !important; gap: 8px !important;
-    }
-
-    .premium-pagination-box a,
-    .premium-pagination-box span {
-        background-color: #111317 !important; border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        color: #b3b3b3 !important; padding: 10px 16px !important; border-radius: 8px !important;
-        font-weight: 700 !important; font-size: 0.9rem !important; text-decoration: none !important;
-        display: inline-flex !important; align-items: center !important; justify-content: center !important;
-        transition: all 0.2s ease; cursor: pointer; margin: 0 !important;
-    }
-
-    .premium-pagination-box a:hover {
-        background-color: #222731 !important; color: #ffffff !important; border-color: rgba(255, 255, 255, 0.15) !important;
-    }
-
-    .premium-pagination-box span[aria-current="page"],
-    .premium-pagination-box .bg-blue-600 {
-        background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
-        color: #ffffff !important; border-color: transparent !important;
-    }
-
-    .premium-pagination-box span[aria-disabled="true"] {
-        background-color: rgba(255, 255, 255, 0.01) !important; color: #3a404a !important;
-        border-color: rgba(255, 255, 255, 0.02) !important; pointer-events: none !important;
-    }
-
-    .premium-pagination-box svg { width: 16px !important; height: 16px !important; fill: currentColor !important; }
 
     @media (max-width: 768px) {
         .client-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }

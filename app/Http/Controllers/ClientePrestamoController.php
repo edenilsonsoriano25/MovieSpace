@@ -34,6 +34,7 @@ class ClientePrestamoController extends Controller implements HasMiddleware
         // Cargamos los préstamos del cliente en sesión de forma directa y segura
         $prestamos = Prestamo::with(['detalles.pelicula'])
             ->where('id_usuario', $usuario->id)
+            ->whereIn('estado_prestamo', ['activo', 'pendiente', 'completado', 'rechazado']) // Mostrar todos
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -41,17 +42,30 @@ class ClientePrestamoController extends Controller implements HasMiddleware
     }
 
     /**
-     * Vista intermedia para confirmar el alquiler desde la web.
+     * Vista intermedia para confirmar la reserva/solicitud desde la web.
      */
     public function alquilar(Pelicula $pelicula)
     {
+        // Verificar si ya tiene un préstamo ACTIVO (no pendiente)
         $prestamoActivo = Prestamo::where('id_usuario', auth()->id())
             ->where('estado_prestamo', 'activo')
             ->exists();
 
         if ($prestamoActivo) {
             return redirect()->route('peliculas.index')
-                ->with('error', '❌ Ya tienes un préstamo activo. Debes devolver tus copias físicas antes de alquilar otra.');
+                ->with('error', '❌ Ya tienes un préstamo activo. Debes devolver tus copias físicas antes de solicitar otra.');
+        }
+
+        // Verificar si ya tiene una solicitud PENDIENTE de esta película
+        $solicitudPendiente = Prestamo::where('id_usuario', auth()->id())
+            ->where('estado_prestamo', 'pendiente')
+            ->whereHas('detalles', function($q) use ($pelicula) {
+                $q->where('id_pelicula', $pelicula->id);
+            })->exists();
+
+        if ($solicitudPendiente) {
+            return redirect()->route('peliculas.index')
+                ->with('error', '❌ Ya tienes una solicitud pendiente para esta película. Espera la respuesta del personal.');
         }
 
         if ($pelicula->copias_en_estante <= 0) {
@@ -63,7 +77,7 @@ class ClientePrestamoController extends Controller implements HasMiddleware
     }
 
     /**
-     * Procesa la reserva o alquiler directo que hace el cliente.
+     * Procesa la SOLICITUD de reserva que hace el cliente (queda PENDIENTE).
      */
     public function clienteStore(Request $request)
     {
@@ -73,6 +87,7 @@ class ClientePrestamoController extends Controller implements HasMiddleware
             'metodo_pago' => 'required|in:efectivo,tarjeta,transferencia'
         ]);
 
+        // Verificar si ya tiene un préstamo ACTIVO
         $prestamoActivo = Prestamo::where('id_usuario', auth()->id())
             ->where('estado_prestamo', 'activo')
             ->exists();
@@ -83,8 +98,9 @@ class ClientePrestamoController extends Controller implements HasMiddleware
 
         $pelicula = Pelicula::find($request->pelicula_id);
 
+        // Verificar stock (solo para mostrar disponibilidad, la reserva no consume stock)
         if ($pelicula->copias_en_estante <= 0) {
-            return redirect()->route('peliculas.index')->with('error', '❌ Stock agotado.');
+            return redirect()->route('peliculas.index')->with('error', '❌ No hay copias disponibles en este momento.');
         }
 
         DB::beginTransaction();
@@ -93,13 +109,14 @@ class ClientePrestamoController extends Controller implements HasMiddleware
             $dias = (int) $request->dias_prestamo;
             $fechaLimite = $fechaSalida->copy()->addDays($dias);
 
-            // Registramos el préstamo vinculando al administrador por defecto (ID: 1) o un ID operativo existente
+            // 🔥 CAMBIO IMPORTANTE: El préstamo se crea como 'pendiente', NO como 'activo'
             $prestamo = Prestamo::create([
                 'id_usuario' => auth()->id(),
-                'id_trabajador' => 1,
+                'id_trabajador' => null,  // Aún no asignado, lo asigna el trabajador al aprobar
                 'fecha_salida' => $fechaSalida,
                 'fecha_limite' => $fechaLimite,
-                'estado_prestamo' => 'activo'
+                'estado_prestamo' => 'pendiente',  // ✅ Cambiado de 'activo' a 'pendiente'
+                'multa_total' => 0
             ]);
 
             DetallePrestamo::create([
@@ -109,23 +126,20 @@ class ClientePrestamoController extends Controller implements HasMiddleware
                 'monto_multa' => 0
             ]);
 
-            $pelicula->decrement('copias_en_estante');
+            // 🔥 NO se descuenta el stock aquí (solo cuando el trabajador apruebe)
+            // $pelicula->decrement('copias_en_estante'); ← COMENTADO
 
-            Pago::create([
-                'id_prestamo' => $prestamo->id,
-                'id_usuario' => auth()->id(),
-                'monto' => $pelicula->precio_alquiler,
-                'concepto' => 'alquiler',
-                'metodo_pago' => $request->metodo_pago,
-                'fecha_pago' => $fechaSalida
-            ]);
+            // 🔥 NO se crea el pago aquí (el pago se hace al retirar en sucursal)
+            // Pago::create(...); ← COMENTADO
 
             DB::commit();
+
             return redirect()->route('mis-prestamos')
-                ->with('success', '✅ ¡Película apartada! Retira tu copia física en sucursal antes del ' . $fechaLimite->format('d/m/Y'));
+                ->with('success', '📋 ¡Solicitud enviada! El personal revisará tu solicitud y te notificará cuando esté aprobada.');
+
         } catch (\Exception $e) {
             DB::rollback();
-            return redirect()->route('peliculas.index')->with('error', 'Error: ' . $e->getMessage());
+            return redirect()->route('peliculas.index')->with('error', 'Error al enviar solicitud: ' . $e->getMessage());
         }
     }
 }

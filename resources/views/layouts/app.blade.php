@@ -44,6 +44,16 @@
                             <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
                             </a>
+                            <!-- 👈 NUEVO: Enlace a Solicitudes con badge -->
+                            <a href="{{ route('solicitudes.pendientes') }}" class="nav-link {{ request()->routeIs('solicitudes.*') ? 'active' : '' }}">
+                                <i class="fas fa-paper-plane"></i> Solicitudes
+                                @php
+                                    $pendientesCount = \App\Models\Prestamo::where('estado_prestamo', 'pendiente')->count();
+                                @endphp
+                                @if($pendientesCount > 0)
+                                    <span class="badge-solicitudes">{{ $pendientesCount }}</span>
+                                @endif
+                            </a>
                             <a href="{{ route('pagos.index') }}" class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}">
                                 <i class="fas fa-cash-register"></i> Caja
                             </a>
@@ -59,6 +69,16 @@
                             </a>
                             <a href="{{ route('prestamos.index') }}" class="nav-link {{ request()->routeIs('prestamos.*') ? 'active' : '' }}">
                                 <i class="fas fa-exchange-alt"></i> Préstamos
+                            </a>
+                            <!-- 👈 NUEVO: Enlace a Solicitudes con badge para trabajador -->
+                            <a href="{{ route('solicitudes.pendientes') }}" class="nav-link {{ request()->routeIs('solicitudes.*') ? 'active' : '' }}">
+                                <i class="fas fa-paper-plane"></i> Solicitudes
+                                @php
+                                    $pendientesCount = \App\Models\Prestamo::where('estado_prestamo', 'pendiente')->count();
+                                @endphp
+                                @if($pendientesCount > 0)
+                                    <span class="badge-solicitudes">{{ $pendientesCount }}</span>
+                                @endif
                             </a>
                             <a href="{{ route('pagos.index') }}" class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}">
                                 <i class="fas fa-cash-register"></i> Caja
@@ -189,7 +209,6 @@
             align-items: center;
             gap: 10px;
             font-size: 1.6rem;
-            fw-bold: 800;
             text-decoration: none;
             background: var(--primary-gradient);
             -webkit-background-clip: text;
@@ -209,6 +228,7 @@
             display: flex;
             gap: 1.5rem;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-link {
@@ -222,6 +242,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            position: relative;
         }
 
         .nav-link:hover {
@@ -232,6 +253,37 @@
         .nav-link.active {
             color: #ffffff;
             background-color: rgba(255, 75, 43, 0.15);
+        }
+
+        /* 👈 NUEVO: Estilos para el badge de solicitudes */
+        .badge-solicitudes {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            color: white;
+            border-radius: 50px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 5px;
+            animation: pulse 1.5s infinite;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.9;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         /* Área de Autenticación */
@@ -312,7 +364,7 @@
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             min-width: 210px;
-            display: none; /* Controlado dinámicamente por JS */
+            display: none;
             overflow: hidden;
             z-index: 1010;
             animation: dropdownFadeIn 0.2s ease-out;
@@ -392,8 +444,8 @@
         /* Contenedor Principal de Vistas */
         .main-viewport {
             flex-grow: 1;
-            padding: 0 2rem; /* Agrega 32px de espacio a la izquierda y derecha */
-            background-color: #0f1115; /* Asegura que el contenedor mantenga el color */
+            padding: 0 2rem;
+            background-color: #0f1115;
         }
         
         @media (min-width: 1200px) {
@@ -428,14 +480,12 @@
             const dropMenu = document.getElementById('userDropdownMenu');
 
             if(toggleBtn && dropMenu) {
-                // Abrir/Cerrar menú al hacer clic en el botón del usuario
                 toggleBtn.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const isVisible = dropMenu.style.display === 'block';
                     dropMenu.style.display = isVisible ? 'none' : 'block';
                 });
 
-                // Cerrar el menú si el usuario hace clic en cualquier otra parte de la pantalla
                 document.addEventListener('click', function() {
                     dropMenu.style.display = 'none';
                 });

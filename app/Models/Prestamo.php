@@ -28,37 +28,37 @@ class Prestamo extends Model
         'fecha_entrega_real' => 'date',
     ];
 
-    // Relación con el usuario (Cliente que alquila la película)
+    // Relación con el usuario (Cliente)
     public function usuario()
     {
         return $this->belongsTo(User::class, 'id_usuario');
     }
 
-    // Relación con el trabajador (Personal operativo que entregó el CD)
+    // Relación con el trabajador (Puede ser NULL)
     public function trabajador()
     {
         return $this->belongsTo(User::class, 'id_trabajador');
     }
 
-    // Relación con los detalles del arriendo
+    // Relación con los detalles
     public function detalles()
     {
         return $this->hasMany(DetallePrestamo::class, 'id_prestamo');
     }
 
-    // Relación con el historial de pagos de la orden
+    // Relación con pagos
     public function pagos()
     {
         return $this->hasMany(Pago::class, 'id_prestamo');
     }
 
-    // Verificar si el arriendo está retrasado
+    // Verificar si está retrasado
     public function estaRetrasado()
     {
         return $this->estado_prestamo === 'activo' && Carbon::now()->gt($this->fecha_limite);
     }
 
-    // Calcular días de retraso acumulados
+    // Calcular días de retraso
     public function diasRetraso()
     {
         if (!$this->estaRetrasado()) {
