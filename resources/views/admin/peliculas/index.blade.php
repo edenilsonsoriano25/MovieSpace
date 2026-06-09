@@ -1,720 +1,445 @@
 @extends('layouts.app')
 
-@section('title', 'Catálogo de Películas')
+@section('title', 'Administrar Catálogo')
 
 @section('content')
-<div class="catalog-dark-wrapper">
+<div class="admin-catalog-wrapper">
     <div class="container-fluid px-4 px-md-5">
-
-        <div class="catalog-header">
-            <h1 class="catalog-title">
-                <i class="fas fa-film"></i> Catálogo de Películas
-            </h1>
-            <p class="catalog-subtitle">Busca tus títulos favoritos y verifica la disponibilidad de copias físicas en nuestra sucursal de Jayaque.</p>
-
-            <div class="search-box-container">
-                <span class="search-icon"><i class="fas fa-search"></i></span>
-                <input type="text" id="search" placeholder="Buscar películas por título, género o director..." onkeyup="buscarPeliculas()">
+        
+        <div class="catalog-page-header">
+            <div class="header-left">
+                <h1 class="catalog-main-title"><i class="fas fa-film"></i> Administrar Catálogo</h1>
+                <p class="catalog-main-subtitle">Controla el inventario de cintas, actualiza precios de arriendo y gestiona las copias físicas en la sucursal de Jayaque.</p>
             </div>
+            <a href="{{ route('admin.peliculas.create') }}" class="btn-premium-action btn-add-movie">
+                <i class="fas fa-plus-circle"></i> Agregar Película
+            </a>
         </div>
 
-        <div id="movies-container">
-            <div class="movies-streaming-grid">
-                @foreach($peliculas as $pelicula)
-                <div class="movie-premium-card" onclick="openPreviewModal({{ json_encode($pelicula) }}, '{{ auth()->check() ? auth()->user()->rol : 'invitado' }}')">
+        @if(session('success'))
+            <div class="toast-alert alert-success-premium">
+                <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
+                <div class="toast-content">{{ session('success') }}</div>
+            </div>
+        @endif
 
-                    <div class="movie-premium-poster">
-                        @if($pelicula->portada)
-                        <img src="{{ $pelicula->portada }}" alt="Portada de {{ $pelicula->titulo }}">
-                        @else
-                        <div class="poster-placeholder">
-                            <i class="fas fa-video"></i>
-                        </div>
-                        @endif
-                        <span class="movie-premium-price">${{ number_format($pelicula->precio_alquiler, 2) }}</span>
-                    </div>
+        @if(session('error'))
+            <div class="toast-alert alert-error-premium">
+                <div class="toast-icon-box"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="toast-content">{{ session('error') }}</div>
+            </div>
+        @endif
 
-                    <div class="movie-premium-body">
-                        <span class="movie-premium-genre">
-                            <i class="fas fa-tag"></i> {{ $pelicula->genero }}
-                        </span>
-                        <h3 class="movie-premium-title" title="{{ $pelicula->titulo }}">
-                            {{ $pelicula->titulo }}
-                        </h3>
-
-                        <div class="movie-premium-stock-box">
+        <div class="premium-table-wrapper">
+            <table class="premium-data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título de la Película</th>
+                        <th>Género</th>
+                        <th>Director</th>
+                        <th style="text-align: center;">Año</th>
+                        <th>Precio Alquiler</th>
+                        <th style="text-align: center;">Stock Total</th>
+                        <th>Disponibilidad</th>
+                        <th style="text-align: center;">Acciones de Control</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($peliculas as $pelicula)
+                    <tr>
+                        <td class="td-id">#{{ str_pad($pelicula->id, 4, '0', STR_PAD_LEFT) }}</td>
+                        <td class="td-title"><strong>{{ $pelicula->titulo }}</strong></td>
+                        <td class="td-genre">{{ $pelicula->genero }}</td>
+                        <td class="td-director">{{ $pelicula->director }}</td>
+                        <td style="text-align: center;" class="td-year">{{ $pelicula->año }}</td>
+                        <td class="td-price">${{ number_format($pelicula->precio_alquiler, 2) }}</td>
+                        <td style="text-align: center;" class="td-stock">{{ $pelicula->copias_totales }} uds.</td>
+                        <td>
                             @if($pelicula->copias_en_estante > 0)
-                            <span class="stock-dot dot-available"></span>
-                            <span class="stock-text text-available"><i class="fas fa-check"></i> {{ $pelicula->copias_en_estante }} disponibles</span>
+                                <span class="badge-stock-pill stock-pill-available">
+                                    <span class="pulse-dot"></span> {{ $pelicula->copias_en_estante }} disponibles
+                                </span>
                             @else
-                            <span class="stock-dot dot-out"></span>
-                            <span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>
+                                <span class="badge-stock-pill stock-pill-out">
+                                    <i class="fas fa-times-circle"></i> Agotado
+                                </span>
                             @endif
-                        </div>
-
-                        <!-- ============================================================ -->
-                        <!-- PASO 3: BOTONES MODIFICADOS - Solicitar para cliente / Alquilar para staff -->
-                        <!-- ============================================================ -->
-                        <div class="movie-premium-actions" onclick="event.stopPropagation();">
-                            @auth
-                                @if(auth()->user()->rol === 'cliente')
-                                    <button onclick="openSolicitudModal({{ $pelicula->id }}, '{{ addslashes($pelicula->titulo) }}', {{ $pelicula->precio_alquiler }}, '{{ $pelicula->portada ?? '' }}')" 
-                                            class="btn-premium-action btn-solicitar {{ $pelicula->copias_en_estante == 0 ? 'disabled-action' : '' }}">
-                                        <i class="fas fa-paper-plane"></i> Solicitar Alquiler
-                                    </button>
-                                @elseif(auth()->user()->rol === 'trabajador' || auth()->user()->rol === 'admin')
-                                    <a href="{{ route('prestamos.create') }}?pelicula_id={{ $pelicula->id }}" class="btn-premium-action btn-staff {{ $pelicula->copias_en_estante == 0 ? 'disabled-action' : '' }}">
-                                        <i class="fas fa-cash-register"></i> Alquilar en Mostrador
-                                    </a>
-                                @endif
-                            @else
-                                <a href="{{ route('login') }}" class="btn-premium-action btn-guest">
-                                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión para Reservar
-                                </a>
-                            @endauth
-                        </div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- Modal de Vista Previa (existente) -->
-<div id="previewMovieModal" class="modal-premium-overlay" onclick="closePreviewModal()">
-    <div class="modal-premium-content movie-preview-box" onclick="event.stopPropagation();">
-        <div class="modal-premium-header">
-            <h3 id="preview-title"><i class="fas fa-info-circle"></i> Título de Película</h3>
-            <span class="close-modal-btn" onclick="closePreviewModal()">&times;</span>
-        </div>
-        
-        <div class="modal-scroll-body">
-            <div class="preview-layout-grid">
-                <div class="preview-poster-box">
-                    <img id="preview-img" src="" alt="Portada">
-                </div>
-                <div class="preview-data-box">
-                    <span id="preview-genre" class="movie-premium-genre">GÉNERO</span>
-                    <div class="meta-pill-row">
-                        <span class="meta-pill"><i class="fas fa-dollar-sign"></i> Alquiler: <strong id="preview-price">0.00</strong></span>
-                        <span class="meta-pill" id="preview-stock-pill">Stock: <strong id="preview-stock">0</strong></span>
-                    </div>
-                    <label class="info-label">Sinopsis / Resumen Ejecutivo:</label>
-                    <p id="preview-synopsis" class="preview-text-synopsis">No hay sinopsis disponible para este título.</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal-premium-footer">
-            <button type="button" class="btn-modal-cancel" onclick="closePreviewModal()">Cerrar Vista</button>
-            <div id="modal-action-placement"></div>
-        </div>
-    </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- PASO 4: MODAL DE SOLICITUD DE ALQUILER -->
-<!-- ============================================================ -->
-<div id="solicitudModal" class="modal-premium-overlay" onclick="closeSolicitudModal()">
-    <div class="modal-premium-content solicitud-modal-box" onclick="event.stopPropagation();">
-        <div class="modal-premium-header">
-            <h3><i class="fas fa-paper-plane"></i> Solicitar Alquiler</h3>
-            <span class="close-modal-btn" onclick="closeSolicitudModal()">&times;</span>
-        </div>
-        
-        <form id="solicitudForm" method="POST" action="{{ route('solicitudes.store') }}">
-            @csrf
-            <input type="hidden" name="pelicula_id" id="solicitud_pelicula_id">
+                        </td>
+                        <td class="td-actions-buttons">
+                            <button class="btn-table-action btn-action-edit" onclick="confirmEdit({{ $pelicula->id }})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-table-action btn-action-delete" onclick="confirmDelete({{ $pelicula->id }}, '{{ addslashes($pelicula->titulo) }}')">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </button>
+                            <form action="{{ route('admin.peliculas.destroy', $pelicula) }}" method="POST" style="display: none;" id="form-delete-{{ $pelicula->id }}">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="9" class="td-empty-state">
+                            <div class="empty-state-box">
+                                <i class="fas fa-video-slash"></i>
+                                <p>No hay películas registradas en el catálogo actual.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
             
-            <div class="modal-scroll-body">
-                <div class="solicitud-movie-info">
-                    <div class="solicitud-movie-poster" id="solicitud_movie_poster"></div>
-                    <div class="solicitud-movie-details">
-                        <h4 id="solicitud_movie_title"></h4>
-                        <p class="precio-base" id="solicitud_movie_price"></p>
-                    </div>
+            @if($peliculas->hasPages())
+                <div class="premium-pagination-box">
+                    {{ $peliculas->links() }}
                 </div>
+            @endif
+        </div>
 
-                <div class="solicitud-form-group">
-                    <label for="dias_solicitados"><i class="fas fa-calendar-day"></i> Días de préstamo</label>
-                    <select name="dias_prestamo" id="dias_solicitados" required>
-                        @for ($i = 1; $i <= 7; $i++)
-                            <option value="{{ $i }}">{{ $i }} día{{ $i != 1 ? 's' : '' }}</option>
-                        @endfor
-                    </select>
-                </div>
-
-                <div class="solicitud-form-group">
-                    <label for="metodo_pago_solicitud"><i class="fas fa-wallet"></i> Método de pago</label>
-                    <select name="metodo_pago" id="metodo_pago_solicitud" required>
-                        <option value="efectivo">💵 Efectivo</option>
-                        <option value="tarjeta">💳 Tarjeta de crédito/débito</option>
-                        <option value="transferencia">🏦 Transferencia bancaria</option>
-                    </select>
-                </div>
-
-                <div class="solicitud-form-group">
-                    <label for="nota_adicional"><i class="fas fa-comment"></i> Nota adicional (opcional)</label>
-                    <textarea name="nota_adicional" id="nota_adicional" rows="2" placeholder="Ej: Prefiero retirar después de las 3pm..."></textarea>
-                </div>
-
-                <div class="resumen-pago-box">
-                    <div class="resumen-line">
-                        <span>Total a pagar:</span>
-                        <strong id="total_pagar">$0.00</strong>
-                    </div>
-                    <p class="info-pago"><i class="fas fa-info-circle"></i> El pago se realiza al momento de retirar la película en sucursal, una vez aprobada tu solicitud.</p>
-                </div>
-            </div>
-
-            <div class="modal-premium-footer">
-                <button type="button" class="btn-modal-cancel" onclick="closeSolicitudModal()">Cancelar</button>
-                <button type="submit" class="btn-modal-save btn-solicitar-enviar">
-                    <i class="fas fa-paper-plane"></i> Enviar Solicitud
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
 <style>
-    .catalog-dark-wrapper {
+    .admin-catalog-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem;
-        padding: 3rem 0;
+        margin-top: -2rem; /* Sincroniza con el padding de app.blade.php */
+        padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
-    .catalog-header {
-        text-align: center;
-        margin-bottom: 4rem;
+    .catalog-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+        gap: 1.5rem;
     }
 
-    .catalog-title {
-        font-size: 2.8rem;
+    .catalog-main-title {
+        font-size: 2.6rem;
         font-weight: 800;
-        margin-bottom: 0.5rem;
+        margin: 0 0 0.4rem 0;
         background: linear-gradient(45deg, #ff416c, #ff4b2b);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
-    .catalog-title i {
+    .catalog-main-title i {
         color: #ff4b2b;
         -webkit-text-fill-color: initial;
         margin-right: 12px;
     }
 
-    .catalog-subtitle {
+    .catalog-main-subtitle {
         color: #6c757d;
-        font-size: 1rem;
-        max-width: 600px;
-        margin: 0 auto;
+        font-size: 0.98rem;
+        margin: 0;
     }
 
-    .search-box-container {
-        position: relative;
-        max-width: 650px;
-        margin: 2.5rem auto 0 auto;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-        border-radius: 50px;
-        overflow: hidden;
-        border: 1px solid #2a2e35;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 22px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 1.1rem;
-    }
-
-    .search-box-container input {
-        width: 100%;
-        padding: 16px 20px 16px 55px;
-        background-color: #1a1d24;
+    .btn-add-movie {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+        color: #ffffff !important;
         border: none;
-        color: #ffffff;
-        font-size: 1rem;
-        outline: none;
-        transition: background 0.3s;
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        flex-shrink: 0;
     }
 
-    .search-box-container input:focus { background-color: #22262f; }
-
-    .movies-streaming-grid {
-        display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
-        gap: 2.5rem !important;
-        width: 100% !important;
+    .btn-add-movie:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    .movie-premium-card {
+    /* CONTENEDOR DE LA DATA-TABLE */
+    .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
         overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.3s ease;
-        position: relative;
-        border: 1px solid rgba(255, 255, 255, 0.03);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .premium-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .premium-data-table th {
+        background: linear-gradient(135deg, #1f232b 0%, #14161c 100%);
+        color: #ffffff;
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .premium-data-table td {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        color: #b3b3b3;
+        font-size: 0.95rem;
+        vertical-align: middle;
+        background-color: #1a1d24 !important; /* Blindaje contra fondos blancos */
+    }
+
+    /* Resaltado de fila al pasar cursor encima */
+    .premium-data-table tbody tr:hover td {
+        background-color: #222731 !important;
+        color: #ffffff !important;
         cursor: pointer;
     }
 
-    .movie-premium-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 28px rgba(255, 75, 43, 0.25);
+    /* BLINDAJE INTEGRAL CONTRA LA LÍNEA BLANCA EN LA COLUMNA DE ACCIONES */
+    .premium-data-table td.td-actions-buttons,
+    .premium-data-table th:last-child,
+    .premium-data-table td:last-child {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+        background-color: #1a1d24 !important;
+        box-shadow: none !important;
     }
 
-    .movie-premium-poster {
-        width: 100%;
-        aspect-ratio: 2 / 3;
-        background-color: #111317;
-        position: relative;
-        overflow: hidden;
+    .premium-data-table tbody tr:hover td.td-actions-buttons,
+    .premium-data-table tbody tr:hover td:last-child {
+        background-color: #222731 !important;
+        box-shadow: none !important;
     }
 
-    .movie-premium-poster img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        transition: transform 0.5s ease;
+    .td-id { font-family: monospace; color: #ff4b2b !important; font-weight: 600; }
+    .td-title { color: #ffffff; }
+    .td-genre { color: #d1d1d1; }
+    .td-director { color: #cdcdcd; }
+    .td-year { color: #8a8a8a; font-family: monospace; }
+    .td-price { color: #2ec4b6 !important; font-weight: 700; font-family: monospace; }
+    .td-stock { font-family: monospace; }
+
+    /* Badges de Existencias (Stock) */
+    .badge-stock-pill {
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: uppercase;
     }
 
-    .movie-premium-card:hover .movie-premium-poster img {
-        transform: scale(1.04);
+    .stock-pill-available { background-color: rgba(46, 196, 182, 0.12); color: #2ec4b6; }
+    .stock-pill-out { background-color: rgba(244, 67, 54, 0.12); color: #ef5350; }
+
+    .pulse-dot {
+        width: 6px;
+        height: 6px;
+        background-color: #2ec4b6;
+        border-radius: 50%;
+        display: inline-block;
     }
 
-    .poster-placeholder {
-        width: 100%;
-        height: 100%;
+    /* Celda de Acciones y Botones Operativos */
+    .td-actions-buttons {
         display: flex;
+        gap: 0.6rem;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a1d24 !important;
+    }
+
+    .btn-table-action {
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .btn-action-edit {
+        background-color: rgba(255, 152, 0, 0.08);
+        color: #ffb74d;
+        border: 1px solid rgba(255, 152, 0, 0.2);
+    }
+
+    .btn-action-edit:hover {
+        background-color: #f57c00;
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(245, 124, 0, 0.25);
+    }
+
+    .btn-action-delete {
+        background: rgba(244, 67, 54, 0.08);
+        color: #ef5350;
+        border: 1px solid rgba(244, 67, 54, 0.2);
+    }
+
+    .btn-action-delete:hover {
+        background: #d32f2f;
+        color: #ffffff;
+        border-color: transparent;
+        box-shadow: 0 4px 12px rgba(211, 47, 47, 0.25);
+    }
+
+    /* ==========================================================================
+       ESTILOS DE PAGINACIÓN PREMIUM MEJORADOS (FIX APILADO)
+       ========================================================================== */
+    .premium-pagination-box {
+        padding: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #1a1d24;
+    }
+
+    /* Ocultar texto informativo en inglés nativo de Laravel */
+    .premium-pagination-box div:first-child p,
+    .premium-pagination-box p.text-muted,
+    .premium-pagination-box .text-sm {
+        display: none !important;
+    }
+
+    /* Forzar alineación horizontal limpia */
+    .premium-pagination-box nav,
+    .premium-pagination-box ul.pagination {
+        display: flex !important;
+        flex-direction: row !important;
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        gap: 6px !important;
+    }
+
+    .premium-pagination-box .page-item .page-link,
+    .premium-pagination-box .page-link,
+    .premium-pagination-box nav span,
+    .premium-pagination-box nav a {
+        background-color: #111317 !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #b3b3b3 !important;
+        padding: 8px 14px !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+        font-size: 0.88rem !important;
+        text-decoration: none !important;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
+        transition: all 0.2s ease;
+        box-shadow: none !important;
     }
 
-    .poster-placeholder i { color: #2b303c; font-size: 4rem; }
-
-    .movie-premium-price {
-        position: absolute;
-        top: 15px; right: 15px;
-        background: linear-gradient(45deg, #ff416c, #ff4b2b);
-        color: #ffffff;
-        padding: 6px 14px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        border-radius: 20px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
-        z-index: 5;
-    }
-
-    .movie-premium-body {
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-    }
-
-    .movie-premium-genre {
-        font-size: 0.72rem;
-        font-weight: 700;
-        color: #ff4b2b;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        font-family: monospace;
-        margin-bottom: 0.4rem;
-        display: block;
-    }
-
-    .movie-premium-title {
-        color: #ffffff;
-        font-size: 1.15rem;
-        font-weight: 600;
-        margin: 0 0 0.8rem 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .movie-premium-stock-box {
-        display: flex;
-        align-items: center;
-        margin-top: auto;
-        margin-bottom: 1.25rem;
-    }
-
-    .stock-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
-    .dot-available { background-color: #2ec4b6; }
-    .dot-out { background-color: #e63946; }
-    .stock-text { font-size: 0.85rem; font-weight: 600; }
-    .text-available { color: #2ec4b6; }
-    .text-out { color: #e63946; }
-
-    /* Botones de acción */
-    .btn-premium-action {
-        display: block; width: 100%; text-align: center; padding: 11px 0;
-        font-weight: 600; font-size: 0.88rem; border-radius: 10px; text-decoration: none;
-        transition: background 0.2s, transform 0.1s; border: none; cursor: pointer;
-    }
-
-    .btn-solicitar {
-        background: linear-gradient(45deg, #00c6ff, #0072ff);
+    .premium-pagination-box .page-item:not(.active) .page-link:hover,
+    .premium-pagination-box nav a:hover {
+        background-color: #222731 !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 15px rgba(0, 114, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.15) !important;
     }
-    .btn-solicitar:hover { background: linear-gradient(45deg, #1ad1ff, #1a80ff); }
 
-    .btn-staff {
-        background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    .premium-pagination-box .page-item.active .page-link,
+    .premium-pagination-box .active > .page-link,
+    .premium-pagination-box nav span[aria-current="page"] {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
         color: #ffffff !important;
-        box-shadow: 0 4px 15px rgba(255, 65, 108, 0.2);
-    }
-    .btn-staff:hover { background: linear-gradient(45deg, #ff527b, #ff5e43); }
-
-    .btn-guest { background-color: #2a2e35; color: #b3b3b3 !important; }
-    .btn-guest:hover { background-color: #343a44; color: #ffffff !important; }
-    .disabled-action { pointer-events: none !important; opacity: 0.3 !important; box-shadow: none !important; }
-
-    /* MODALES */
-    .modal-premium-overlay {
-        display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
-        background: rgba(10, 11, 14, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-    }
-
-    .modal-premium-content {
-        background-color: #1a1d24; margin: 5% auto; width: 92%; max-width: 680px;
-        border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.03);
-        animation: modalSlideDown 0.25s cubic-bezier(0.165, 0.84, 0.44, 1); overflow: hidden;
-        max-height: 85vh; display: flex; flex-direction: column;
-    }
-
-    .modal-premium-header {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        padding: 1.5rem 1.75rem !important;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
-        background-color: #121419 !important;
-    }
-
-    .modal-premium-header h3 {
-        margin: 0 !important;
-        font-size: 1.4rem !important;
+        border-color: transparent !important;
         font-weight: 700 !important;
-        color: #ffffff !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
     }
 
-    .modal-premium-header h3 i { color: #ff4b2b !important; }
-
-    .close-modal-btn {
-        font-size: 1.8rem !important;
-        font-weight: 400 !important;
-        color: #6c757d !important;
-        cursor: pointer !important;
-        transition: color 0.2s ease, transform 0.2s ease !important;
-        line-height: 1 !important;
-        padding: 0 5px !important;
+    .premium-pagination-box .page-item.disabled .page-link,
+    .premium-pagination-box nav span[aria-disabled="true"] {
+        background-color: rgba(255, 255, 255, 0.01) !important;
+        color: #4a5262 !important;
+        border-color: rgba(255, 255, 255, 0.02) !important;
+        pointer-events: none;
     }
 
-    .close-modal-btn:hover {
-        color: #ff4b2b !important;
-        transform: scale(1.1) !important;
+    /* Contenedores Auxiliares */
+    .td-empty-state {
+        padding: 5rem 0 !important;
+        text-align: center;
     }
 
-    .modal-scroll-body { overflow-y: auto; flex-grow: 1; padding: 1.5rem; }
-    
-    .preview-layout-grid {
-        display: grid;
-        grid-template-columns: 180px 1fr;
-        gap: 1.5rem;
+    .empty-state-box {
+        color: #495057;
     }
 
-    .preview-poster-box {
-        width: 100%; aspect-ratio: 2 / 3; border-radius: 10px; overflow: hidden;
-        background-color: #111317; border: 1px solid rgba(255,255,255,0.03);
-    }
-    .preview-poster-box img { width: 100%; height: 100%; object-fit: cover; }
+    .empty-state-box i { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state-box p { font-size: 1.1rem; font-weight: 600; margin: 0; }
 
-    .preview-data-box { display: flex; flex-direction: column; }
-    .meta-pill-row { display: flex; gap: 0.75rem; margin: 1rem 0 1.5rem 0; flex-wrap: wrap; }
-    .meta-pill {
-        background-color: #111317; padding: 6px 14px; border-radius: 30px;
-        font-size: 0.85rem; color: #cdcdcd; border: 1px solid rgba(255,255,255,0.03);
-    }
-    .meta-pill strong { color: #ffffff; }
-    .info-label { font-size: 0.85rem; color: #6c757d; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; }
-    .preview-text-synopsis { color: #d1d1d1; line-height: 1.6; font-size: 0.95rem; margin: 0; }
-
-    .modal-premium-footer {
-        background-color: #121419; display: flex; justify-content: flex-end;
-        gap: 0.75rem; border-top: 1px solid rgba(255,255,255,0.04); padding: 1rem 1.5rem; flex-shrink: 0;
-    }
-
-    .btn-modal-cancel {
-        background-color: #2a2e35; color: #b3b3b3; border: none; padding: 11px 20px;
-        border-radius: 8px; font-weight: 600; font-size: 0.88rem; cursor: pointer; transition: all 0.2s;
-    }
-    .btn-modal-cancel:hover { background-color: #343a44; color: #ffffff; }
-
-    .btn-modal-save {
-        background: linear-gradient(45deg, #00c6ff, #0072ff);
-        color: #ffffff; border: none; padding: 11px 24px; border-radius: 8px;
-        font-weight: 600; font-size: 0.88rem; cursor: pointer;
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .btn-modal-save:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,114,255,0.3); }
-
-    /* Estilos del Modal de Solicitud */
-    .solicitud-modal-box { max-width: 500px !important; }
-    .solicitud-movie-info {
-        display: flex;
-        gap: 1rem;
-        padding: 1rem;
-        background-color: #111317;
-        border-radius: 12px;
-        margin-bottom: 1.5rem;
-    }
-    .solicitud-movie-poster {
-        width: 60px;
-        height: 90px;
-        background-color: #1a1d24;
-        border-radius: 8px;
-        background-size: cover;
-        background-position: center;
-    }
-    .solicitud-movie-details h4 {
-        color: white;
-        margin: 0 0 0.25rem 0;
-        font-size: 1rem;
-    }
-    .precio-base { color: #2ec4b6; font-weight: bold; margin: 0; }
-    .solicitud-form-group {
-        margin-bottom: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    .solicitud-form-group label { color: #cdcdcd; font-size: 0.85rem; font-weight: 600; }
-    .solicitud-form-group select, .solicitud-form-group textarea {
-        background-color: #111317;
-        border: 1px solid rgba(255,255,255,0.05);
-        border-radius: 8px;
-        padding: 10px 14px;
-        color: white;
-        font-family: inherit;
-    }
-    .resumen-pago-box {
-        background: linear-gradient(45deg, rgba(255,65,108,0.1), rgba(255,75,43,0.05));
-        border-radius: 10px;
-        padding: 1rem;
-        margin-top: 1rem;
-    }
-    .resumen-line {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1.1rem;
-    }
-    .resumen-line strong { color: #2ec4b6; font-size: 1.3rem; }
-    .info-pago { font-size: 0.75rem; color: #6c757d; margin-top: 0.5rem; }
-
-    @media (max-width: 600px) {
-        .preview-layout-grid { grid-template-columns: 1fr; }
-        .preview-poster-box { max-width: 160px; margin: 0 auto; }
+    @media (max-width: 768px) {
+        .catalog-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+        .btn-add-movie { width: 100%; justify-content: center; }
     }
 </style>
 
-@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-    const userRole = "{{ auth()->check() ? auth()->user()->rol : '' }}";
-
-    // ============================================================
-    // FUNCIONES DEL MODAL DE VISTA PREVIA (EXISTENTE)
-    // ============================================================
-    function openPreviewModal(pelicula, rolContexto) {
-        document.getElementById('preview-title').innerHTML = `<i class="fas fa-film"></i> ${pelicula.titulo}`;
-        document.getElementById('preview-genre').innerText = pelicula.genero;
-        document.getElementById('preview-price').innerText = parseFloat(pelicula.precio_alquiler).toFixed(2);
-        document.getElementById('preview-stock').innerText = pelicula.copias_en_estante;
-        document.getElementById('preview-synopsis').innerText = pelicula.sinopsis || 'No hay descripción detallada disponible para este título cinematográfico.';
-
-        const img = document.getElementById('preview-img');
-        if(pelicula.portada) {
-            img.src = pelicula.portada;
-            img.style.display = 'block';
-        } else {
-            img.src = '';
-            img.style.display = 'none';
-        }
-
-        const pill = document.getElementById('preview-stock-pill');
-        if(pelicula.copias_en_estante > 0) {
-            pill.style.borderLeft = "3px solid #2ec4b6";
-        } else {
-            pill.style.borderLeft = "3px solid #e63946";
-        }
-
-        const placement = document.getElementById('modal-action-placement');
-        placement.innerHTML = ''; 
-
-        if (rolContexto === 'cliente') {
-            let disabledClass = pelicula.copias_en_estante == 0 ? 'disabled-action' : '';
-            placement.innerHTML = `
-                <button onclick="openSolicitudModal(${pelicula.id}, '${pelicula.titulo.replace(/'/g, "\\'")}', ${pelicula.precio_alquiler}, '${pelicula.portada || ''}')" 
-                        class="btn-premium-action btn-solicitar ${disabledClass}" style="padding: 11px 24px;">
-                    <i class="fas fa-paper-plane"></i> Solicitar Alquiler
-                </button>`;
-        } else if (rolContexto === 'trabajador' || rolContexto === 'admin') {
-            let disabledClass = pelicula.copias_en_estante == 0 ? 'disabled-action' : '';
-            placement.innerHTML = `
-                <a href="/prestamos/create?pelicula_id=${pelicula.id}" class="btn-premium-action btn-staff ${disabledClass}" style="padding: 11px 24px;">
-                    <i class="fas fa-cash-register"></i> Despachar en Mostrador
-                </a>`;
-        } else {
-            placement.innerHTML = `
-                <a href="/login" class="btn-premium-action btn-guest" style="padding: 11px 24px;">
-                    <i class="fas fa-sign-in-alt"></i> Loguearse para Alquilar
-                </a>`;
-        }
-
-        document.getElementById('previewMovieModal').style.display = 'block';
-    }
-
-    function closePreviewModal() {
-        document.getElementById('previewMovieModal').style.display = 'none';
-    }
-
-    // ============================================================
-    // FUNCIONES DEL MODAL DE SOLICITUD (NUEVAS)
-    // ============================================================
-    let currentPeliculaId = null;
-    let currentPrecio = 0;
-
-    function openSolicitudModal(peliculaId, titulo, precio, portada) {
-        currentPeliculaId = peliculaId;
-        currentPrecio = precio;
-        
-        document.getElementById('solicitud_pelicula_id').value = peliculaId;
-        document.getElementById('solicitud_movie_title').innerHTML = titulo;
-        document.getElementById('solicitud_movie_price').innerHTML = `$${parseFloat(precio).toFixed(2)} por día`;
-        
-        // Configurar el poster
-        const posterDiv = document.getElementById('solicitud_movie_poster');
-        if (portada) {
-            posterDiv.style.backgroundImage = `url('${portada}')`;
-            posterDiv.style.backgroundSize = 'cover';
-            posterDiv.style.backgroundPosition = 'center';
-        } else {
-            posterDiv.style.backgroundImage = `linear-gradient(45deg, #2a2e35, #1a1d24)`;
-            posterDiv.innerHTML = '<i class="fas fa-film" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #4a5262;"></i>';
-        }
-        
-        actualizarTotal();
-        
-        document.getElementById('solicitudModal').style.display = 'block';
-    }
-
-    function closeSolicitudModal() {
-        document.getElementById('solicitudModal').style.display = 'none';
-        document.getElementById('solicitudForm').reset();
-        document.getElementById('solicitud_movie_poster').style.backgroundImage = '';
-        document.getElementById('solicitud_movie_poster').innerHTML = '';
-    }
-
-    function actualizarTotal() {
-        const dias = document.getElementById('dias_solicitados').value;
-        const total = dias * currentPrecio;
-        document.getElementById('total_pagar').innerHTML = `$${total.toFixed(2)}`;
-    }
-
-    // Escuchar cambios en días
-    document.getElementById('dias_solicitados')?.addEventListener('change', actualizarTotal);
-
-    // Cerrar modal con ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closePreviewModal();
-            closeSolicitudModal();
+function confirmEdit(id) {
+    Swal.fire({
+        title: '¿Modificar Registro?',
+        text: "Vas a abrir el formulario de actualización de parámetros para esta película.",
+        icon: 'question',
+        background: '#1a1d24',
+        color: '#ffffff',
+        showCancelButton: true,
+        confirmButtonColor: '#ff9800',
+        cancelButtonColor: '#2a2e35',
+        confirmButtonText: '<i class="fas fa-edit"></i> Sí, continuar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = `/admin/peliculas/${id}/edit`;
         }
     });
+}
 
-    // ============================================================
-    // FUNCIÓN DE BÚSQUEDA (EXISTENTE)
-    // ============================================================
-    function buscarPeliculas() {
-        let query = document.getElementById('search').value;
+function confirmDelete(id, titulo) {
+    Swal.fire({
+        title: '¿Remover Película?',
+        text: `¿Estás seguro de eliminar permanentemente "${titulo}"? El stock físico se dará de baja en el sistema.`,
+        icon: 'warning',
+        background: '#1a1d24',
+        color: '#ffffff',
+        showCancelButton: true,
+        confirmButtonColor: '#ef5350',
+        cancelButtonColor: '#2a2e35',
+        confirmButtonText: '<i class="fas fa-trash-alt"></i> Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(`form-delete-${id}`).submit();
+        }
+    });
+}
 
-        fetch(`/buscar-peliculas?search=${query}`)
-            .then(response => response.json())
-            .then(data => {
-                let container = document.getElementById('movies-container');
-                container.innerHTML = '';
-
-                if (data.length === 0) {
-                    container.innerHTML = `
-                    <div style="text-align: center; padding: 5rem 0; width: 100%; grid-column: 1 / -1;">
-                        <i class="fas fa-search fa-3x" style="color: #3a3f4d; margin-bottom: 1.5rem; display:block;"></i>
-                        <p style="color: #6c757d; font-size: 1.1rem;">No se encontraron películas coincidentes.</p>
-                    </div>`;
-                    return;
-                }
-
-                let html = '<div class="movies-streaming-grid">';
-
-                data.forEach(pelicula => {
-                    let precio = parseFloat(pelicula.precio_alquiler).toFixed(2);
-                    let ctxRol = isAuthenticated ? userRole : 'invitado';
-
-                    let stockHTML = pelicula.copias_en_estante > 0 ?
-                        `<span class="stock-dot dot-available"></span><span class="stock-text text-available"><i class="fas fa-check"></i> ${pelicula.copias_en_estante} disponibles</span>` :
-                        `<span class="stock-dot dot-out"></span><span class="stock-text text-out"><i class="fas fa-times"></i> Agotado</span>`;
-
-                    let botonHTML = '';
-                    let disabledStyle = pelicula.copias_en_estante == 0 ? 'disabled-action' : '';
-                    
-                    if (isAuthenticated) {
-                        if (userRole === 'cliente') {
-                            botonHTML = `<button onclick="openSolicitudModal(${pelicula.id}, '${pelicula.titulo.replace(/'/g, "\\'")}', ${pelicula.precio_alquiler}, '${pelicula.portada || ''}')" class="btn-premium-action btn-solicitar ${disabledStyle}"><i class="fas fa-paper-plane"></i> Solicitar Alquiler</button>`;
-                        } else {
-                            botonHTML = `<a href="/prestamos/create?pelicula_id=${pelicula.id}" class="btn-premium-action btn-staff ${disabledStyle}"><i class="fas fa-cash-register"></i> Alquilar en Mostrador</a>`;
-                        }
-                    } else {
-                        botonHTML = `<a href="/login" class="btn-premium-action btn-guest"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>`;
-                    }
-
-                    let portadaHTML = pelicula.portada ? 
-                        `<img src="${pelicula.portada}" alt="Portada">` : 
-                        `<div class="poster-placeholder"><i class="fas fa-video"></i></div>`;
-
-                    html += `
-                    <div class="movie-premium-card" onclick='openPreviewModal(${JSON.stringify(pelicula).replace(/'/g, "&#39;")}, "${ctxRol}")'>
-                        <div class="movie-premium-poster">
-                            ${portadaHTML}
-                            <span class="movie-premium-price">$${precio}</span>
-                        </div>
-                        <div class="movie-premium-body">
-                            <span class="movie-premium-genre"><i class="fas fa-tag"></i> ${pelicula.genero}</span>
-                            <h3 class="movie-premium-title" title="${pelicula.titulo}">${pelicula.titulo}</h3>
-                            <div class="movie-premium-stock-box">${stockHTML}</div>
-                            <div class="movie-premium-actions" onclick="event.stopPropagation();">${botonHTML}</div>
-                        </div>
-                    </div>`;
-                });
-
-                html += '</div>';
-                container.innerHTML = html;
-            });
-    }
+// Fade out progresivo controlado para los carteles de alertas de Laravel
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        let alerts = document.querySelectorAll('.toast-alert');
+        alerts.forEach(alert => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        });
+    }, 4000);
+});
 </script>
-@endpush
 @endsection

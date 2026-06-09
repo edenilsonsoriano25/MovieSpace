@@ -6,7 +6,6 @@
 <div class="dash-dark-wrapper">
     <div class="container-fluid px-4 px-md-5">
         
-        <!-- ENCABEZADO DE BIENVENIDA -->
         <div class="dash-header">
             <h1 class="dash-title">
                 <i class="fas fa-chart-line"></i> Panel de Administración
@@ -14,53 +13,50 @@
             <p class="dash-subtitle">Bienvenido al centro de control de MovieSpace. Monitorea transacciones, inventarios y operaciones en Jayaque.</p>
         </div>
 
-        <!-- SECCIÓN 1: TARJETAS DE MÉTRICAS EN TIEMPO REAL (KPI CARDS) -->
         <div class="metrics-grid">
             
-            <!-- Métrica: Ingresos de Caja -->
             <div class="metric-card card-revenue">
                 <div class="metric-icon-box">
                     <i class="fas fa-cash-register"></i>
                 </div>
                 <div class="metric-data">
                     <span class="metric-label">Caja del Día</span>
-                    <h2 class="metric-value">$0.00</h2>
+                    <h2 class="metric-value">${{ number_format($cajaHoy ?? 0, 2) }}</h2>
                     <span class="metric-trend text-success"><i class="fas fa-arrow-up"></i> Flujo activo</span>
                 </div>
             </div>
 
-            <!-- Métrica: Alquileres Activos -->
             <div class="metric-card card-rentals">
                 <div class="metric-icon-box">
                     <i class="fas fa-ticket-alt"></i>
                 </div>
                 <div class="metric-data">
                     <span class="metric-label">CDs en Custodia</span>
-                    <h2 class="metric-value">0</h2>
+                    <h2 class="metric-value">{{ $prestamosActivos ?? 0 }}</h2>
                     <span class="metric-trend text-muted">Préstamos vigentes</span>
                 </div>
             </div>
 
-            <!-- Métrica: Películas en Catálogo -->
             <div class="metric-card card-inventory">
                 <div class="metric-icon-box">
                     <i class="fas fa-film"></i>
                 </div>
                 <div class="metric-data">
                     <span class="metric-label">Títulos Registrados</span>
-                    <h2 class="metric-value">0</h2>
+                    <h2 class="metric-value">{{ $totalPeliculas ?? 0 }}</h2>
                     <span class="metric-trend text-info">Copias en estante</span>
                 </div>
             </div>
 
-            <!-- Métrica: Alertas Críticas (Mora) -->
             <div class="metric-card card-alerts">
                 <div class="metric-icon-box">
                     <i class="fas fa-exclamation-triangle"></i>
                 </div>
                 <div class="metric-data">
                     <span class="metric-label">Devoluciones Retrasadas</span>
-                    <h2 class="metric-value text-danger">0</h2>
+                    <h2 class="metric-value {{ ($devolucionesRetrasadas ?? 0) > 0 ? 'text-danger' : '' }}">
+                        {{ $devolucionesRetrasadas ?? 0 }}
+                    </h2>
                     <span class="metric-trend text-danger">⚠️ Requiere auditoría</span>
                 </div>
             </div>
@@ -69,10 +65,8 @@
 
         <h3 class="dash-section-divider"><i class="fas fa-th-large"></i> Accesos y Herramientas de Gestión</h3>
 
-        <!-- SECCIÓN 2: CUADRÍCULA DE CONTROL (ACCESOS DIRECTOS MEJORADOS) -->
         <div class="dashboard-grid">
             
-            <!-- Tarjeta: Gestionar Catálogo -->
             <div class="dashboard-premium-card">
                 <div class="card-glow-bg"></div>
                 <div class="card-premium-content">
@@ -85,7 +79,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta: Gestionar Usuarios -->
             <div class="dashboard-premium-card">
                 <div class="card-glow-bg"></div>
                 <div class="card-premium-content">
@@ -98,7 +91,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta: Reportes Estadísticos -->
             <div class="dashboard-premium-card">
                 <div class="card-glow-bg"></div>
                 <div class="card-premium-content">
@@ -111,7 +103,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta: Préstamos Globales -->
             <div class="dashboard-premium-card">
                 <div class="card-glow-bg"></div>
                 <div class="card-premium-content">
@@ -124,7 +115,6 @@
                 </div>
             </div>
             
-            <!-- Tarjeta: Gestión de Caja -->
             <div class="dashboard-premium-card">
                 <div class="card-glow-bg"></div>
                 <div class="card-premium-content">
@@ -142,12 +132,11 @@
     </div>
 </div>
 
-<!-- HOJA DE ESTILOS ENCAPSULADA DE ALTA FIDELIDAD PARA EL DASHBOARD -->
 <style>
     .dash-dark-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con el app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -178,7 +167,6 @@
         margin: 0;
     }
 
-    /* REJILLA DE TARJETAS DE MÉTRICAS (KPIs) */
     .metrics-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
@@ -219,7 +207,7 @@
         font-size: 0.75rem;
         color: #6c757d;
         font-weight: 700;
-        text-uppercase: uppercase;
+        text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
@@ -238,9 +226,8 @@
     .text-success { color: #2ec4b6; }
     .text-info { color: #ff416c; }
     .text-muted { color: #495057; }
-    .text-danger { color: #f03e3e; }
+    .text-danger { color: #f03e3e !important; }
 
-    /* SECCIÓN DE ACCESOS DIRECTOS */
     .dash-section-divider {
         color: #ffffff;
         font-size: 1.2rem;
@@ -264,7 +251,6 @@
         width: 100%;
     }
 
-    /* Tarjetas de herramientas premium interactiva */
     .dashboard-premium-card {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -279,7 +265,6 @@
         transform: translateY(-6px);
     }
 
-    /* Efecto de resplandor trasero oculto en hover */
     .card-glow-bg {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -324,7 +309,6 @@
         margin: 0 0 1.75rem 0;
     }
 
-    /* Botón de control premium */
     .premium-card-btn {
         margin-top: auto;
         background-color: #111317;

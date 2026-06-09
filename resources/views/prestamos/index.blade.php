@@ -6,7 +6,6 @@
 <div class="loans-dark-wrapper">
     <div class="container-fluid px-4 px-md-5">
         
-        <!-- ENCABEZADO DE CONTROL INTERACTIVO -->
         <div class="loans-page-header">
             <div class="header-left">
                 <h1 class="loans-main-title"><i class="fas fa-exchange-alt"></i> Gestión de Préstamos</h1>
@@ -17,7 +16,6 @@
             </a>
         </div>
 
-        <!-- NOTIFICACIONES TEMPORALES DE OPERACIÓN -->
         @if(session('success'))
             <div class="toast-alert alert-success-premium">
                 <div class="toast-icon-box"><i class="fas fa-check-circle"></i></div>
@@ -32,7 +30,6 @@
             </div>
         @endif
 
-        <!-- TARJETAS METODOLÓGICAS DE INDICADORES (STATS) -->
         <div class="loans-stats-grid">
             <div class="loans-stat-card border-glow-blue">
                 <div class="stat-icon-box icon-blue"><i class="fas fa-ticket-alt"></i></div>
@@ -59,7 +56,6 @@
             </div>
         </div>
 
-        <!-- TABLA DE CONTROL OPERATIVO DE ALQUILERES -->
         <div class="premium-table-wrapper">
             <table class="premium-data-table">
                 <thead>
@@ -114,7 +110,18 @@
                                         @csrf
                                     </form>
                                 @endif
-                                <button class="btn-loan-action btn-action-view" onclick="verDetalle({{ $prestamo->id }})">
+                                
+                                <button class="btn-loan-action btn-action-view" 
+                                        onclick="verDetalle(
+                                            '{{ str_pad($prestamo->id, 5, '0', STR_PAD_LEFT) }}', 
+                                            '{{ addslashes($prestamo->usuario->name) }}', 
+                                            '{{ $prestamo->usuario->email }}', 
+                                            '{{ addslashes($prestamo->detalles->map(function($d){ return $d->pelicula->titulo; })->implode(', ')) }}', 
+                                            '{{ \Carbon\Carbon::parse($prestamo->fecha_salida)->format('d/m/Y') }}', 
+                                            '{{ \Carbon\Carbon::parse($prestamo->fecha_limite)->format('d/m/Y') }}', 
+                                            '{{ $prestamo->estado_prestamo }}', 
+                                            '{{ number_format($prestamo->multa_total, 2) }}'
+                                        )">
                                     <i class="fas fa-eye"></i> Detalle
                                 </button>
                             </div>
@@ -124,7 +131,6 @@
                 </tbody>
             </table>
             
-            <!-- CONTENEDOR DE PAGINACIÓN COMPATIBLE DE FILA ÚNICA -->
             @if($prestamos->hasPages())
                 <div class="premium-pagination-box">
                     {{ $prestamos->links() }}
@@ -135,12 +141,11 @@
     </div>
 </div>
 
-<!-- HOJA DE ESTILOS ENCAPSULADA DE ALTA FIDELIDAD MULTIMEDIA -->
 <style>
     .loans-dark-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -197,7 +202,6 @@
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* REJILLA DE TARJETAS INFORMATIVAS (STATS) */
     .loans-stats-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
@@ -240,7 +244,6 @@
     .stat-number { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0; }
     .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
 
-    /* CONTENEDOR DE LA DATA-TABLE */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -272,17 +275,15 @@
         color: #b3b3b3;
         font-size: 0.95rem;
         vertical-align: middle;
-        background-color: #1a1d24 !important; /* Capa anti-fondo blanco de Bootstrap */
+        background-color: #1a1d24 !important;
     }
 
-    /* Hover dinámico con resguardo gris ebanizado */
     .premium-data-table tbody tr:hover td {
         background-color: #222731 !important;
         color: #ffffff !important;
         cursor: pointer;
     }
 
-    /* BLINDAJE EXTRA SEGURO CONTRA LÍNEAS BLANCAS EN LA ÚLTIMA COLUMNA DE BOTONES */
     .premium-data-table th:last-child,
     .premium-data-table td:last-child,
     .premium-data-table td.td-actions-cell {
@@ -303,7 +304,6 @@
     .td-date-normal { font-family: monospace; color: #d1d1d1; }
     .td-date-limit { font-family: monospace; }
     
-    /* Manejo del estado Overdue / Expirado */
     .limit-overdue .date-text { color: #ef5350 !important; font-weight: 700; }
     .badge-danger-pill {
         background-color: rgba(244, 67, 54, 0.15);
@@ -316,7 +316,6 @@
         text-transform: uppercase;
     }
 
-    /* Píldoras de Cintas */
     .badge-movie-pill {
         display: inline-flex;
         align-items: center;
@@ -330,7 +329,6 @@
         border: 1px solid rgba(255,255,255,0.03);
     }
 
-    /* Estados de la Orden */
     .status-pill {
         font-size: 0.76rem;
         font-weight: 700;
@@ -352,11 +350,9 @@
         display: inline-block;
     }
 
-    /* Controladores monetarios */
     .text-danger-fine { color: #ef5350 !important; font-weight: 700; font-family: monospace; }
     .text-fine-zero { color: #495057; font-family: monospace; }
 
-    /* Alineación de Botones (Fijación Flex sin romper la celda) */
     .actions-wrapper {
         display: flex !important;
         gap: 0.5rem;
@@ -403,8 +399,36 @@
     }
 
     /* ==========================================================================
-       🔥 ULTRA-FIX CONTRA PAGINACIÓN APILADA EN INGLÉS (TAILWIND OVERRIDE)
+       🛡️ BLINDAJE ULTRA-STRICT CONTRA FONDOS BLANCOS INVOLUNTARIOS EN EL MODAL
        ========================================================================== */
+    .swal-modal-table {
+        width: 100% !important;
+        margin-top: 15px !important;
+        border-collapse: collapse !important;
+        text-align: left !important;
+        background-color: #1a1d24 !important;
+    }
+
+    /* Fuerza de forma absoluta a que ninguna fila o celda herede fondos de Bootstrap */
+    .swal-modal-table tr, 
+    .swal-modal-table td {
+        background-color: #1a1d24 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        padding: 12px 10px !important;
+        font-size: 0.92rem !important;
+        vertical-align: middle !important;
+    }
+
+    .swal-modal-table td.swal-label {
+        color: #6c757d !important;
+        font-weight: 600 !important;
+        width: 30% !important;
+    }
+
+    .swal-modal-table td.swal-value {
+        color: #ffffff !important;
+    }
+
     .premium-pagination-box {
         padding: 1.5rem;
         border-top: 1px solid rgba(255, 255, 255, 0.04);
@@ -416,7 +440,6 @@
         box-sizing: border-box;
     }
 
-    /* Ocultar por completo textos en inglés nativos de Laravel */
     .premium-pagination-box div:first-child,
     .premium-pagination-box p,
     .premium-pagination-box .text-sm,
@@ -424,7 +447,6 @@
         display: none !important;
     }
 
-    /* Forzar alineación horizontal rígida */
     .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
     .premium-pagination-box flex,
@@ -436,7 +458,6 @@
         gap: 8px !important;
     }
 
-    /* Botones numéricos de navegación */
     .premium-pagination-box a,
     .premium-pagination-box span {
         background-color: #111317 !important;
@@ -450,8 +471,6 @@
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        transition: all 0.2s ease;
-        cursor: pointer;
         margin: 0 !important;
     }
 
@@ -466,7 +485,6 @@
         background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
         color: #ffffff !important;
         border-color: transparent !important;
-        font-weight: 700 !important;
     }
 
     .premium-pagination-box span[aria-disabled="true"] {
@@ -488,7 +506,6 @@
     }
 </style>
 
-<!-- DISPARADORES JAVASCRIPT REFACTORIZADOS EN ENTORNOS OSCUROS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 function confirmDevolucion(id) {
@@ -510,10 +527,45 @@ function confirmDevolucion(id) {
     });
 }
 
-function verDetalle(id) {
+function verDetalle(id, cliente, email, peliculas, salida, limite, estado, multa) {
+    let estadoBadge = estado === 'activo' 
+        ? '<span style="color: #2ec4b6; font-weight: bold; text-transform: uppercase;">Activo</span>' 
+        : '<span style="color: #8a8a8a; font-weight: bold; text-transform: uppercase;">Devuelto</span>';
+
+    let multaTexto = parseFloat(multa) > 0 
+        ? `<span style="color: #ef5350; font-weight: bold;">$${multa}</span>` 
+        : `<span style="color: #6c757d;">$${multa}</span>`;
+
     Swal.fire({
-        title: 'Detalle del Préstamo',
-        text: `Consultando bitácora de movimientos transaccionales de la orden de arriendo con folio #${id}.`,
+        title: `Detalle del Préstamo #${id}`,
+        html: `
+            <table class="swal-modal-table">
+                <tr>
+                    <td class="swal-label">Cliente:</td>
+                    <td class="swal-value"><strong>${cliente}</strong><br><small style="color: #8a8a8a;">${email}</small></td>
+                </tr>
+                <tr>
+                    <td class="swal-label">Películas:</td>
+                    <td class="swal-value" style="color: #ff416c; font-weight: 600;">${peliculas}</td>
+                </tr>
+                <tr>
+                    <td class="swal-label">F. Salida:</td>
+                    <td class="swal-value" style="font-family: monospace;">${salida}</td>
+                </tr>
+                <tr>
+                    <td class="swal-label">F. Límite:</td>
+                    <td class="swal-value" style="font-family: monospace;">${limite}</td>
+                </tr>
+                <tr>
+                    <td class="swal-label">Estado:</td>
+                    <td class="swal-value">${estadoBadge}</td>
+                </tr>
+                <tr>
+                    <td class="swal-label">Multa Actual:</td>
+                    <td class="swal-value">${multaTexto}</td>
+                </tr>
+            </table>
+        `,
         icon: 'info',
         background: '#1a1d24',
         color: '#ffffff',
@@ -522,7 +574,6 @@ function verDetalle(id) {
     });
 }
 
-// Desvanecimiento controlado de avisos
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         let alerts = document.querySelectorAll('.toast-alert');

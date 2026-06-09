@@ -23,12 +23,18 @@
                 <div class="form-premium-section">
                     <h3 class="section-form-title"><i class="fas fa-user-tag"></i> Datos del Cliente</h3>
                     <div class="form-premium-group">
-                        <label for="id_usuario">Seleccionar Cuenta de Usuario</label>
-                        <div class="premium-select-wrapper">
-                            <select name="id_usuario" id="id_usuario" required>
-                                <option value="">-- Selecciona el correo o nombre del afiliado --</option>
+                        <label for="search_cliente">Buscar Afiliado (Escribe nombre o correo)</label>
+                        <div class="premium-input-search-wrapper">
+                            <i class="fas fa-search search-input-icon"></i>
+                            <input type="text" id="search_cliente" placeholder="Empieza a escribir para buscar un cliente..." class="premium-search-input" autocomplete="off">
+                        </div>
+                        
+                        <div class="premium-select-wrapper mt-2 customer-list-container" id="cliente_list_container">
+                            <select name="id_usuario" id="id_usuario" required size="4" class="premium-scrollable-select">
                                 @foreach($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">{{ $cliente->name }} — {{ $cliente->email }}</option>
+                                    <option value="{{ $cliente->id }}" data-search="{{ strtolower($cliente->name . ' ' . $cliente->email) }}">
+                                        {{ $cliente->name }} — {{ $cliente->email }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -36,25 +42,49 @@
                 </div>
 
                 <div class="form-premium-section">
-                    <h3 class="section-form-title"><i class="fas fa-film"></i> Películas a Alquilar <span class="title-helper">(Puedes marcar varias cintas)</span></h3>
+                    <div class="section-header-flex">
+                        <h3 class="section-form-title"><i class="fas fa-film"></i> Películas a Alquilar <span class="title-helper">(Puedes marcar varias cintas)</span></h3>
+                        <div class="premium-input-search-wrapper short-search">
+                            <i class="fas fa-search search-input-icon"></i>
+                            <input type="text" id="search_pelicula" placeholder="Buscar película por título..." class="premium-search-input" autocomplete="off">
+                        </div>
+                    </div>
                     
-                    <div class="peliculas-premium-grid">
+                    <div class="peliculas-premium-grid" id="peliculas_container">
                         @foreach($peliculas as $pelicula)
-                        <div class="pelicula-premium-checkbox">
+                        <div class="pelicula-premium-checkbox" data-titulo="{{ strtolower($pelicula->titulo) }}">
                             <label class="checkbox-interactive-label">
                                 <input type="checkbox" name="peliculas[]" value="{{ $pelicula->id }}">
                                 <span class="checkbox-custom-indicator"></span>
+                                
+                                <div class="cd-media-wrapper">
+                                    <div class="cd-disc">
+                                        <div class="cd-hole"></div>
+                                        @if($pelicula->imagen)
+                                            <img src="{{ asset('storage/' . $pelicula->imagen) }}" alt="{{ $pelicula->titulo }}" class="cd-poster-img">
+                                        @else
+                                            <div class="cd-poster-placeholder">
+                                                <i class="fas fa-compact-disc"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
                                 
                                 <div class="pelicula-premium-info">
                                     <strong class="movie-title-text">{{ $pelicula->titulo }}</strong>
                                     <div class="movie-meta-row">
                                         <span class="movie-price-tag">${{ number_format($pelicula->precio_alquiler, 2) }}</span>
-                                        <span class="movie-stock-tag"><i class="fas fa-compact-disc"></i> {{ $pelicula->copias_en_estante }} en estante</span>
+                                        <span class="movie-stock-tag"><i class="fas fa-layer-group"></i> {{ $pelicula->copias_en_estante }} u.</span>
                                     </div>
                                 </div>
                             </label>
                         </div>
                         @endforeach
+                    </div>
+
+                    <div class="alert-warning-premium d-none" id="movie_empty_alert">
+                        <div class="alert-icon-box"><i class="fas fa-exclamation-triangle"></i></div>
+                        <p>No se encontraron películas que coincidan con los criterios de búsqueda.</p>
                     </div>
 
                     @if($peliculas->isEmpty())
@@ -83,9 +113,9 @@
                             <label for="metodo_pago"><i class="fas fa-wallet"></i> Método de Pago</label>
                             <div class="premium-select-wrapper">
                                 <select name="metodo_pago" id="metodo_pago" required>
-                                    <option value="efectivo">💵 Efectivo en Caja</option>
-                                    <option value="tarjeta">💳 Terminal de Tarjeta</option>
-                                    <option value="transferencia">🏦 Transferencia de Banco</option>
+                                    <option value="efectivo">Efectivo en Caja</option>
+                                    <option value="tarjeta">Terminal de Tarjeta</option>
+                                    <option value="transferencia">Transferencia de Banco</option>
                                 </select>
                             </div>
                         </div>
@@ -109,7 +139,7 @@
     .loans-create-wrapper {
         background-color: #0f1115;
         min-height: 100vh;
-        margin-top: -2rem; /* Sincroniza con app.blade.php */
+        margin-top: -2rem;
         padding: 3rem 0 5rem 0;
         color: #ffffff;
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -162,9 +192,9 @@
     .btn-premium-back:hover {
         background-color: #242933;
         color: #ffffff !important;
+        border-color: rgba(255,255,255,0.15);
     }
 
-    /* TARJETA DEL FORMULARIO CENTRAL */
     .premium-form-card {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -182,6 +212,19 @@
     .form-premium-section {
         border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         padding-bottom: 2rem;
+    }
+
+    .section-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .section-header-flex .section-form-title {
+        margin-bottom: 0;
     }
 
     .form-premium-section.last-section {
@@ -210,7 +253,7 @@
     .form-premium-group {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.6rem;
     }
 
     .form-premium-group label {
@@ -219,7 +262,75 @@
         font-weight: 600;
     }
 
-    /* Componentes Desplegables Select Estilizados */
+    /* BUSCADORES PREMIUM INPUTS */
+    .premium-input-search-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .premium-input-search-wrapper.short-search {
+        width: 320px;
+    }
+
+    .premium-search-input {
+        width: 100%;
+        padding: 12px 16px 12px 42px;
+        background-color: #111317;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 0.92rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: all 0.2s ease;
+    }
+
+    .premium-search-input:focus {
+        border-color: #ff4b2b;
+        box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15);
+    }
+
+    .search-input-icon {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    /* 📌 OCULTAR CONTENEDOR DEL LISTADO DE CLIENTES POR DEFECTO */
+    .customer-list-container {
+        display: none; 
+        transition: all 0.3s ease;
+    }
+
+    /* SELECT EXPANDIDO EN MODO LISTA */
+    .premium-scrollable-select {
+        height: auto !important;
+        max-height: 160px;
+        overflow-y: auto;
+        padding: 8px !important;
+    }
+
+    .premium-scrollable-select option {
+        padding: 10px 12px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        background-color: #111317;
+        transition: background 0.15s;
+    }
+
+    .premium-scrollable-select option:hover {
+        background-color: #222731 !important;
+        color: #ffffff;
+    }
+
+    .premium-scrollable-select option:checked {
+        background: linear-gradient(45deg, #ff416c, #ff4b2b) !important;
+        color: #ffffff !important;
+    }
+
     .premium-form-card select {
         width: 100%;
         padding: 12px 16px;
@@ -235,71 +346,53 @@
         cursor: pointer;
     }
 
-    .premium-form-card select:focus {
-        border-color: #ff4b2b;
-        background-color: #14171c;
-        box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15);
-    }
-
-    /* Inyección de Flecha Minimalista en los Selects */
+    /* SELECTS PLANOS INFERIORES */
     .premium-select-wrapper { position: relative; width: 100%; }
-    .premium-select-wrapper select { appearance: none; -webkit-appearance: none; padding-right: 40px; }
-    .premium-select-wrapper::after {
+    .premium-select-wrapper select:not([size]) { appearance: none; -webkit-appearance: none; padding-right: 40px; }
+    .premium-select-wrapper select:not([size]):focus { border-color: #ff4b2b; box-shadow: 0 0 0 3px rgba(255, 75, 43, 0.15); }
+    .premium-select-wrapper:not(:has([size]))::after {
         content: '\f078'; font-family: 'Font Awesome 5 Free'; font-weight: 900;
         font-size: 0.72rem; color: #6c757d; position: absolute; right: 16px; top: 50%;
         transform: translateY(-50%); pointer-events: none;
     }
 
-    /* FILA INTERNA EN DOS COLUMNAS RESPONSIVAS */
-    .form-premium-row {
-        display: flex;
-        gap: 1.5rem;
-    }
+    .form-premium-row { display: flex; gap: 1.5rem; }
+    .form-premium-row .form-premium-group { flex: 1; }
 
-    .form-premium-row .form-premium-group {
-        flex: 1;
-    }
-
-    /* CUADRÍCULA MULTIMEDIA DE CHECBOXES */
+    /* REJILLA MULTIMEDIA */
     .peliculas-premium-grid {
         display: grid !important;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
         gap: 1.25rem !important;
-        max-height: 380px;
+        max-height: 420px;
         overflow-y: auto;
         padding-right: 8px;
     }
 
-    /* Personalización de la barra de desplazamiento interna */
     .peliculas-premium-grid::-webkit-scrollbar { width: 6px; }
     .peliculas-premium-grid::-webkit-scrollbar-track { background: #111317; border-radius: 10px; }
     .peliculas-premium-grid::-webkit-scrollbar-thumb { background: #2a2e35; border-radius: 10px; }
 
-    /* Tarjeta Checkbox Activa */
     .pelicula-premium-checkbox {
         background-color: #111317;
         border: 1px solid rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
+        border-radius: 16px;
         transition: all 0.2s ease;
     }
 
     .checkbox-interactive-label {
         display: flex;
         align-items: center;
-        padding: 1rem;
-        gap: 12px;
+        padding: 1.1rem;
+        gap: 14px;
         cursor: pointer;
         width: 100%;
         box-sizing: border-box;
         user-select: none;
     }
 
-    /* Ocultar input nativo tosco */
-    .checkbox-interactive-label input[type="checkbox"] {
-        display: none;
-    }
+    .checkbox-interactive-label input[type="checkbox"] { display: none; }
 
-    /* Indicador personalizado de Checkbox circular */
     .checkbox-custom-indicator {
         width: 20px;
         height: 20px;
@@ -310,72 +403,84 @@
         transition: all 0.2s;
     }
 
-    /* Comportamiento al activarse */
     .checkbox-interactive-label input[type="checkbox"]:checked + .checkbox-custom-indicator {
         border-color: #ff4b2b;
         background-color: #ff4b2b;
     }
 
     .checkbox-interactive-label input[type="checkbox"]:checked + .checkbox-custom-indicator::after {
-        content: '\f00c';
-        font-family: 'Font Awesome 5 Free';
-        font-weight: 900;
-        font-size: 0.65rem;
-        color: #ffffff;
-        position: absolute;
-        top: 50%; left: 50%;
+        content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900;
+        font-size: 0.65rem; color: #ffffff; position: absolute; top: 50%; left: 50%;
         transform: translate(-50%, -50%);
     }
 
-    /* Resaltar la tarjeta completa si el checkbox está activo */
-    .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) {
-        border-color: rgba(255, 75, 43, 0.3);
-        background-color: rgba(255, 75, 43, 0.02);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    .pelicula-premium-checkbox:hover {
-        border-color: rgba(255, 255, 255, 0.1);
-        background-color: #14171d;
-    }
-
-    .pelicula-premium-info {
+    /* 📀 MAQUETACIÓN PREMIUM EFECTO DISCO CD FISICO */
+    .cd-media-wrapper {
+        flex-shrink: 0;
+        width: 65px;
+        height: 65px;
         display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        flex-grow: 1;
-        overflow: hidden;
-    }
-
-    .movie-title-text {
-        color: #ffffff;
-        font-size: 0.95rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .movie-meta-row {
-        display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: center;
     }
 
-    .movie-price-tag {
-        color: #2ec4b6;
-        font-weight: 700;
-        font-size: 0.88rem;
-        font-family: monospace;
+    .cd-disc {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        position: relative;
+        overflow: hidden;
+        border: 2px solid #252932;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(255, 255, 255, 0.1);
+        background-color: #1a1d24;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
-    .movie-stock-tag {
-        color: #6c757d;
-        font-size: 0.78rem;
-        font-weight: 500;
+    .cd-hole {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        background-color: #111317; 
+        border: 2.5px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* Caja de Alerta Vacía */
+    .cd-poster-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .cd-poster-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #222731;
+        color: #495057;
+        font-size: 1.4rem;
+    }
+
+    .pelicula-premium-checkbox:hover .cd-disc { transform: rotate(45deg); }
+    .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) .cd-disc { border-color: #ff4b2b; box-shadow: 0 0 12px rgba(255, 75, 43, 0.4); }
+    .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) .cd-hole { background-color: #161213; border-color: rgba(255, 75, 43, 0.2); }
+    .pelicula-premium-checkbox:has(input[type="checkbox"]:checked) { border-color: rgba(255, 75, 43, 0.3); background-color: rgba(255, 75, 43, 0.02); }
+    .pelicula-premium-checkbox:hover { border-color: rgba(255, 255, 255, 0.1); background-color: #14171d; }
+
+    .pelicula-premium-info { display: flex; flex-direction: column; gap: 0.25rem; flex-grow: 1; overflow: hidden; }
+    .movie-title-text { color: #ffffff; font-size: 0.95rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .movie-meta-row { display: flex; justify-content: space-between; align-items: center; }
+    .movie-price-tag { color: #2ec4b6; font-weight: 700; font-size: 0.88rem; font-family: monospace; }
+    .movie-stock-tag { color: #6c757d; font-size: 0.78rem; font-weight: 500; }
+
     .alert-warning-premium {
         background-color: rgba(255, 152, 0, 0.1);
         border: 1px solid rgba(255, 152, 0, 0.15);
@@ -387,17 +492,16 @@
         color: #ffb74d;
         font-weight: 600;
         font-size: 0.92rem;
+        margin-top: 1rem;
     }
 
     .alert-icon-box { font-size: 1.1rem; }
-    .alert-warning-premium p { margin: 0; }
+    .alert-warning-premium.d-none { display: none !important; }
 
-    /* Botonera inferior de confirmación */
     .form-premium-actions {
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
-        margin-top: 1.5rem;
         border-top: 1px solid rgba(255,255,255,0.04);
         padding-top: 2rem;
     }
@@ -413,10 +517,7 @@
         transition: all 0.2s;
     }
 
-    .btn-form-cancel:hover {
-        background-color: #343a44;
-        color: #ffffff !important;
-    }
+    .btn-form-cancel:hover { background-color: #343a44; color: #ffffff !important; }
 
     .btn-form-save {
         background: linear-gradient(45deg, #2ec4b6, #009688);
@@ -439,12 +540,75 @@
         box-shadow: 0 6px 18px rgba(46, 196, 182, 0.3);
     }
 
-    /* Consultas de Adaptación Móvil */
     @media (max-width: 768px) {
         .create-page-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
         .btn-premium-back, .form-premium-actions { width: 100%; }
         .form-premium-row { flex-direction: column; gap: 1.5rem; }
         .premium-form-card { padding: 1.5rem; }
         .btn-form-save, .btn-form-cancel { flex: 1; text-align: center; justify-content: center; }
+        .premium-input-search-wrapper.short-search { width: 100%; }
+        .section-header-flex { flex-direction: column; align-items: flex-start; }
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // 🔍 1. Lógica del Buscador de Clientes Dinámico
+    const searchCliente = document.getElementById('search_cliente');
+    const containerCliente = document.getElementById('cliente_list_container');
+    const selectCliente = document.getElementById('id_usuario');
+    const optionsCliente = selectCliente.querySelectorAll('option');
+
+    searchCliente.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        
+        // Si el buscador está vacío, ocultamos la lista completa
+        if (term === '') {
+            containerCliente.style.display = 'none';
+            return;
+        }
+
+        // Si tiene texto, hacemos visible la caja de opciones
+        containerCliente.style.display = 'block';
+        
+        optionsCliente.forEach(option => {
+            const searchData = option.getAttribute('data-search');
+            if (searchData) {
+                if (searchData.includes(term)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            }
+        });
+    });
+
+    // 🔍 2. Lógica del Buscador de Películas (Grid Checkboxes)
+    const searchPelicula = document.getElementById('search_pelicula');
+    const movieCards = document.querySelectorAll('.pelicula-premium-checkbox');
+    const emptyAlert = document.getElementById('movie_empty_alert');
+
+    searchPelicula.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        movieCards.forEach(card => {
+            const titulo = card.getAttribute('data-titulo');
+            if (titulo.includes(term)) {
+                card.style.setProperty('display', 'block', 'important');
+                visibleCount++;
+            } else {
+                card.style.setProperty('display', 'none', 'important');
+            }
+        });
+
+        if (visibleCount === 0 && term !== '') {
+            emptyAlert.classList.remove('d-none');
+        } else {
+            emptyAlert.classList.add('d-none');
+        }
+    });
+});
+</script>
+@endsection

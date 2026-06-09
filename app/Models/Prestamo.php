@@ -52,18 +52,39 @@ class Prestamo extends Model
         return $this->hasMany(Pago::class, 'id_prestamo');
     }
 
-    // Verificar si está retrasado
+    // Verificar si está retrasado basado únicamente en días calendario enteros
     public function estaRetrasado()
     {
-        return $this->estado_prestamo === 'activo' && Carbon::now()->gt($this->fecha_limite);
+        return $this->estado_prestamo === 'activo' && Carbon::now()->startOfDay()->gt($this->fecha_limite);
     }
 
-    // Calcular días de retraso
+    // Calcular días de retraso absolutos forzando enteros positivos sin residuos horarios
     public function diasRetraso()
     {
         if (!$this->estaRetrasado()) {
             return 0;
         }
-        return Carbon::now()->diffInDays($this->fecha_limite);
+        return Carbon::now()->startOfDay()->diffInDays($this->fecha_limite, true);
+    }
+
+    /**
+     * Accessor dinámico para multa_total
+     * Calcula de forma automática 1.00 dolar por cada día de retraso exacto.
+     */
+    public function getMultaTotalAttribute()
+    {
+        // Si el préstamo ya no está activo (ej. devuelto), devolvemos el valor estático de la base de datos
+        if ($this->estado_prestamo !== 'activo') {
+            return $this->attributes['multa_total'] ?? 0;
+        }
+
+        // Si está activo pero aún no ha pasado la fecha límite, la multa es cero
+        if (!$this->estaRetrasado()) {
+            return 0;
+        }
+
+        // 1 dolar por cada día de retraso entero
+        $costoPorDia = 1.00;
+        return $this->diasRetraso() * $costoPorDia;
     }
 }

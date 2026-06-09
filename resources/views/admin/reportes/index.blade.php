@@ -15,18 +15,19 @@
             <div class="header-filters-group">
                 <div class="select-wrapper">
                     <select id="mesReporte">
-                        <option value="1">Enero</option>
-                        <option value="2">Febrero</option>
-                        <option value="3">Marzo</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Mayo</option>
-                        <option value="6">Junio</option>
-                        <option value="7">Julio</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Septiembre</option>
-                        <option value="10">Octubre</option>
-                        <option value="11">Noviembre</option>
-                        <option value="12">Diciembre</option>
+                        @php
+                            $mesesAnio = [
+                                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril', 
+                                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto', 
+                                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+                            ];
+                            $mesActualNum = \Carbon\Carbon::now()->month;
+                        @endphp
+                        @foreach($mesesAnio as $numMes => $nombreMes)
+                            @if($numMes <= $mesActualNum)
+                                <option value="{{ $numMes }}" {{ $numMes == $mesActualNum ? 'selected' : '' }}>{{ $nombreMes }}</option>
+                            @endif
+                        @endforeach
                     </select>
                 </div>
                 <div class="select-wrapper">
@@ -106,17 +107,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                    @endphp
-                    @foreach($meses as $index => $mes)
-                    <tr>
-                        <td class="td-month"><strong>{{ $mes }}</strong></td>
-                        <td>{{ rand(15, 45) }} ords.</td>
-                        <td class="text-white-50">${{ number_format(rand(100, 400), 2) }}</td>
-                        <td class="text-danger-fine">${{ number_format(rand(0, 45), 2) }}</td>
-                        <td class="td-total-net">${{ number_format(rand(150, 450), 2) }}</td>
-                    </tr>
+                    @foreach($mesesAnio as $numMes => $nombreMes)
+                        @if($numMes <= $mesActualNum)
+                            @php
+                                $cantPrestamos = $conteosMensuales[$numMes] ?? 0;
+                                $ingAlquiler = $ingresosMensuales[$numMes] ?? 0;
+                                $moraMultas = $multasMensuales[$numMes] ?? 0;
+                                $totalNetoFila = $ingAlquiler + $moraMultas;
+                            @endphp
+                            <tr>
+                                <td class="td-month"><strong>{{ $nombreMes }}</strong></td>
+                                <td>{{ $cantPrestamos }} ords.</td>
+                                <td class="text-white-50">${{ number_format($ingAlquiler, 2) }}</td>
+                                <td class="text-danger-fine">${{ number_format($moraMultas, 2) }}</td>
+                                <td class="td-total-net">${{ number_format($totalNetoFila, 2) }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>
@@ -130,25 +136,33 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Configuración global de fuentes y colores para Chart.js en modo oscuro
     Chart.defaults.color = '#8a8a8a';
     Chart.defaults.font.family = "'Segoe UI', sans-serif";
 
-    // 1. Gráfico de Barras Combinado
+    // Rebanamos los arreglos para que los gráficos de Chart.js terminen simétricamente en el mes actual
+    const mesCorte = {{ $mesActualNum }};
+    const conteosReales = @json(array_values($conteosMensuales)).slice(0, mesCorte);
+    const ingresosReales = @json(array_values($ingresosMensuales)).slice(0, mesCorte);
+    const etiquetasMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'].slice(0, mesCorte);
+
+    const alquilerPuroReal = {{ $totalAlquilerPuro }};
+    const multasHistoricasReales = {{ $totalMultasHistorico }};
+
+    // 1. Gráfico de Barras Combinado Dinámico
     const ctx = document.getElementById('prestamosChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+            labels: etiquetasMeses,
             datasets: [{
                 label: 'Préstamos Emitidos',
-                data: [22, 31, 25, 27, 34, 42, 49, 45, 38, 29, 25, 20],
+                data: conteosReales,
                 backgroundColor: 'rgba(255, 65, 108, 0.85)',
                 borderRadius: 6,
                 borderSkipped: false
             }, {
                 label: 'Ingresos Netos ($)',
-                data: [150, 210, 180, 195, 240, 310, 350, 320, 270, 210, 180, 140],
+                data: ingresosReales,
                 backgroundColor: 'rgba(46, 196, 182, 0.85)',
                 borderRadius: 6,
                 borderSkipped: false
@@ -167,14 +181,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 2. Gráfico Circular Estilizado
+    // 2. Gráfico Circular Estilizado Dinámico
     const ctx2 = document.getElementById('pagosChart').getContext('2d');
     new Chart(ctx2, {
         type: 'doughnut',
         data: {
             labels: ['Alquileres de Portada', 'Multas por Mora'],
             datasets: [{
-                data: [88, 12],
+                data: [alquilerPuroReal, multasHistoricasReales],
                 backgroundColor: ['#ff4b2b', '#2ec4b6'],
                 borderWidth: 4,
                 borderColor: '#1a1d24',
@@ -192,12 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Función Refactorizada para Generar PDF Ejecutivo Limpio en A4 (Fondo Blanco para Imprimir)
 function generarPDF() {
     const nombreMes = document.getElementById('mesReporte').options[document.getElementById('mesReporte').selectedIndex].text;
     const anio = document.getElementById('anioReporte').value;
     
-    // Alerta estilizada táctil
     Swal.fire({
         title: 'Procesando Documento',
         text: `Compilando balance financiero de ${nombreMes} ${anio}...`,
@@ -216,7 +228,7 @@ function generarPDF() {
                 <tr>
                     <td>
                         <h1 style="margin: 0; color: #ff4b2b; font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">MOVIESPACE</h1>
-                        <p style="margin: 4px 0 0 0; color: #6c757d; font-size: 12px; font-weight: 600; text-uppercase: uppercase;">Sistema de Control de Inventarios</p>
+                        <p style="margin: 4px 0 0 0; color: #6c757d; font-size: 12px; font-weight: 600; text-transform: uppercase;">Sistema de Control de Inventarios</p>
                     </td>
                     <td style="text-align: right; vertical-align: top;">
                         <h2 style="margin: 0; color: #1a1d24; font-size: 18px; font-weight: 700;">REPORTE FINANCIERO</h2>
@@ -254,7 +266,7 @@ function generarPDF() {
             </div>
 
             <div style="background-color: #fff9db; border-left: 4px solid #fcc419; padding: 15px; border-radius: 6px; font-size: 12px; line-height: 1.5; color: #664d03; margin-bottom: 50px;">
-                <strong>Nota de Certificación:</strong> Este documento constituye un balance financiero algorítmico generado por el software MovieSpace basándose en las transacciones vigentes en bases de datos relacionales. Válido para revisiones de contabilidad operativa de fin de mes.
+                <strong>Nota de Certificación:</strong> Este documento constituye un balance financiero algorítmico generado por el software MovieSpace basándose en las transacciones vigentes en bases de datos relacionales. Válido para reviews de contabilidad operativa de fin de mes.
             </div>
 
             <table style="width: 100%; margin-top: 100px; font-size: 12px; color: #6c757d;">
@@ -326,7 +338,6 @@ function generarPDF() {
         margin: 0;
     }
 
-    /* Grupo de Filtros Desplegables */
     .header-filters-group {
         display: flex;
         align-items: center;
@@ -350,7 +361,6 @@ function generarPDF() {
 
     .header-filters-group select:focus { border-color: #ff4b2b; }
 
-    /* Custom Injected Select wrapper arrow */
     .select-wrapper { position: relative; }
     .header-filters-group select { appearance: none; -webkit-appearance: none; }
     .select-wrapper::after {
@@ -380,7 +390,6 @@ function generarPDF() {
         box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
     }
 
-    /* REJILLA DE KPIS DE NEGOCIO */
     .reports-stats-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
@@ -425,7 +434,6 @@ function generarPDF() {
     .stat-number { font-size: 1.8rem; font-weight: 800; color: #fff; margin: 0; }
     .stat-label { font-size: 0.82rem; color: #6c757d; font-weight: 600; }
 
-    /* REJILLA DE CONTENEDORES DE GRÁFICOS (CANVAS) */
     .charts-streaming-grid {
         display: grid !important;
         grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)) !important;
@@ -455,7 +463,6 @@ function generarPDF() {
     .chart-box-title i { color: #ff4b2b; }
     .canvas-wrapper { position: relative; height: 260px; width: 100%; }
 
-    /* TABLA DE RESUMEN NETO */
     .premium-table-wrapper {
         background-color: #1a1d24;
         border-radius: 16px;
@@ -490,7 +497,6 @@ function generarPDF() {
         color: #b3b3b3; font-size: 0.95rem; background-color: #1a1d24 !important;
     }
 
-    /* Evita el bug del texto invisible forzando gris oscuro en hover */
     .premium-data-table tbody tr:hover td {
         background-color: #222731 !important;
         color: #ffffff !important;
@@ -502,7 +508,7 @@ function generarPDF() {
     .td-total-net { text-align: right; color: #2ec4b6 !important; font-weight: 700; font-family: monospace; font-size: 1.05rem; }
 
     @media (max-width: 768px) {
-        .reports-page-header { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+        .reports-page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
         .header-filters-group { width: 100%; }
         .header-filters-group .select-wrapper, .btn-generate-pdf { flex: 1; width: 100%; }
         .charts-streaming-grid { grid-template-columns: 1fr !important; }

@@ -59,7 +59,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/historial-alquileres', [ClientePrestamoController::class, 'misPrestamos'])->name('mis-prestamos');
     Route::get('/alquilar/{pelicula}', [ClientePrestamoController::class, 'alquilar'])->name('alquilar');
     Route::post('/prestamos/cliente/store', [ClientePrestamoController::class, 'clienteStore'])->name('prestamos.cliente.store');
-    
+
     // 👈 NUEVO: Cliente puede enviar solicitud de alquiler
     Route::post('/solicitudes', [SolicitudController::class, 'store'])->name('solicitudes.store');
 });
@@ -89,7 +89,7 @@ Route::middleware(['auth'])->group(function () {
         // Auditoría de Dinero y Finanzas
         Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
         Route::get('/caja', [PagoController::class, 'caja'])->name('caja.index');
-        
+
         // 👈 NUEVO: Gestión de solicitudes (solo para trabajadores y admin)
         Route::get('/solicitudes/pendientes', [SolicitudController::class, 'pendientes'])->name('solicitudes.pendientes');
         Route::post('/solicitudes/{id}/aprobar', [SolicitudController::class, 'aprobar'])->name('solicitudes.aprobar');
@@ -117,9 +117,8 @@ Route::middleware(['auth'])->group(function () {
     ], function () {
 
         // Dashboard Gerencial
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        //  POR ESTO:
+        Route::get('/dashboard', [ReporteController::class, 'dashboard'])->name('dashboard');
 
         // Control de Personal y Cuentas
         Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
