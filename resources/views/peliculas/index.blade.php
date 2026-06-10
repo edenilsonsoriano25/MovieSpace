@@ -414,7 +414,7 @@
         document.getElementById('preview-price').innerText = parseFloat(pelicula.precio_alquiler).toFixed(2);
         document.getElementById('preview-stock').innerText = pelicula.copias_en_estante;
         
-        // 🎯 CORREGIDO: Cambiado pelicula.descripcion por pelicula.sinopsis para vincular con tu DB
+        // CORREGIDO: Cambiado pelicula.descripcion por pelicula.sinopsis para vincular con tu DB
         document.getElementById('preview-synopsis').innerText = pelicula.sinopsis || 'No hay descripción detallada disponible para este título cinematográfico.';
 
         const img = document.getElementById('preview-img');

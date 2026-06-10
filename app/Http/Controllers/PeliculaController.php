@@ -39,7 +39,7 @@ class PeliculaController extends Controller
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
-        // 🛠️ VALIDACIÓN ACTUALIZADA: Se añade la URL obligatoria de la portada
+        // VALIDACIÓN ACTUALIZADA: Se añade la URL obligatoria de la portada
         $request->validate([
             'titulo' => 'required|string|max:255',
             'sinopsis' => 'required|string',
@@ -62,7 +62,7 @@ class PeliculaController extends Controller
             'precio_alquiler' => $request->precio_alquiler,
             'copias_totales' => $request->copias_totales,
             'copias_en_estante' => $request->copias_en_estante,
-            'portada' => $request->portada, // 🎯 Guardado físico del enlace
+            'portada' => $request->portada, // Guardado físico del enlace
         ]);
 
         return redirect()->route('admin.peliculas.index')
@@ -84,7 +84,7 @@ class PeliculaController extends Controller
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 
-        // 🛠️ VALIDACIÓN ACTUALIZADA PARA EDIT: Incluye control perimetral de la portada
+        // VALIDACIÓN ACTUALIZADA PARA EDIT: Incluye control perimetral de la portada
         $request->validate([
             'titulo' => 'required|string|max:255',
             'sinopsis' => 'required|string',
@@ -107,7 +107,7 @@ class PeliculaController extends Controller
             'precio_alquiler' => $request->precio_alquiler,
             'copias_totales' => $request->copias_totales,
             'copias_en_estante' => $request->copias_en_estante,
-            'portada' => $request->portada, // 🎯 Actualización del enlace
+            'portada' => $request->portada, // Actualización del enlace
         ]);
 
         return redirect()->route('admin.peliculas.index')

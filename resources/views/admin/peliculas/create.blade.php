@@ -252,10 +252,10 @@
 
 @push('scripts')
 <script>
-    const GEMINI_API_KEY = 'AIzaSyBsC0p2B6XdSEue3xn0Nnmri_nJCzLWtT4';
-    const OMDB_API_KEY = 'd611cad6'; 
-    const TMDB_API_KEY = '1f0be84ce73a753b8c79764aac7264aa'; 
-    const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w500';
+    const GEMINI_API_KEY = "{!! env('GEMINI_API_KEY') !!}";
+    const OMDB_API_KEY   = "{!! env('OMDB_API_KEY') !!}"; 
+    const TMDB_API_KEY   = "{!! env('TMDB_API_KEY') !!}"; 
+    const TMDB_IMG_BASE  = "{!! env('TMDB_IMG_BASE', 'https://image.tmdb.org/t/p/w500') !!}";
 
     function sincronizarTituloHub() {
         const tituloVal = document.getElementById('titulo').value;
@@ -416,15 +416,17 @@
                 }
             }
 
+            sinopsisOriginal = sinopsisOriginal.replace(/[\r\n]+/g, " ").replace(/"/g, '\\"').trim();
+
             document.getElementById('titulo').value = tituloFinal;
             document.getElementById('director').value = directorFinal;
             document.getElementById('año').value = anioFinal;
             document.getElementById('portada').value = portadaUrl;
             document.getElementById('genero').value = generoFinal;
 
-            if (sinopsisOriginal.trim().length > 0) {
+            if (sinopsisOriginal.length > 0) {
                 try {
-                    const promptTraduccion = `Traduce al español de forma fluida y profesional el siguiente resumen de la película "${tituloFinal}": "${sinopsisOriginal}". Devuelve únicamente el texto traducido de un máximo de 4 líneas, sin agregar introducciones, aclaraciones ni comillas.`;
+                    const promptTraduccion = `Traduce al español el resumen de la película "${tituloFinal}": "${sinopsisOriginal}". Devuelve únicamente la traducción limpia, sin comillas ni textos extras.`;
 
                     const responseAi = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
                         method: 'POST',
@@ -441,12 +443,12 @@
                         sinopsisTraducida = sinopsisTraducida.replace(/^"+|"+$/g, '').replace(/```/g, '').trim();
                         document.getElementById('sinopsis').value = sinopsisTraducida;
                     } else {
-                        document.getElementById('sinopsis').value = sinopsisOriginal;
+                        document.getElementById('sinopsis').value = sinopsisOriginal.replace(/\\"/g, '"');
                     }
 
                 } catch (aiErr) {
                     console.error("Fallo al traducir con Gemini:", aiErr);
-                    document.getElementById('sinopsis').value = sinopsisOriginal; 
+                    document.getElementById('sinopsis').value = sinopsisOriginal.replace(/\\"/g, '"'); 
                 }
             } else {
                 document.getElementById('sinopsis').value = 'Sin descripción disponible para este título.';
@@ -458,14 +460,13 @@
             imgFrame.style.display = 'block';
             placeholder.style.display = 'none';
 
+        } catch (error) {
+            console.error("Fallo general en recolección de metadatos:", error);
+        } finally {
             closeHubModal();
             const toast = document.getElementById('hub-toast');
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 2500);
-
-        } catch (error) {
-            console.error("Fallo general:", error);
-            closeHubModal();
         }
     }
 

@@ -47,7 +47,7 @@
 
                 <div class="form-premium-section">
                     <div class="section-header-flex">
-                        <h3 class="section-form-title"><i class="fas fa-film"></i> Películas a Alquilar <span class="title-helper">(Puedes marcar varias cintas)</span></h3>
+                        <h3 class="section-form-title"><i class="fas fa-film"></i> Películas a Alquilar <span class="title-helper">(Puedes marcar solo una cinta)</span></h3>
                         <div class="premium-input-search-wrapper short-search">
                             <i class="fas fa-search search-input-icon"></i>
                             <input type="text" id="search_pelicula" placeholder="Buscar película por título..." class="premium-search-input" autocomplete="off">
@@ -573,7 +573,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 🔍 1. Lógica del Buscador de Clientes Dinámico
+    // 1. Lógica del Buscador de Clientes Dinámico
     const searchCliente = document.getElementById('search_cliente');
     const selectCliente = document.getElementById('id_usuario');
     const optionsCliente = selectCliente.querySelectorAll('option');
@@ -659,7 +659,7 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarInputConClienteSeleccionado();
     }
 
-    // 🔍 2. Lógica del Buscador de Películas (Grid Checkboxes)
+    // 2. Lógica del Buscador de Películas (Grid Checkboxes)
     const searchPelicula = document.getElementById('search_pelicula');
     const movieCards = document.querySelectorAll('.pelicula-premium-checkbox');
     const emptyAlert = document.getElementById('movie_empty_alert');

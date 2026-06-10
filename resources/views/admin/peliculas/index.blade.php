@@ -321,7 +321,7 @@
         display: none !important;
     }
 
-    /* 🎯 CLAVE: Forzar flex-row horizontal rígido e impedir el salto de línea */
+    /* CLAVE: Forzar flex-row horizontal rígido e impedir el salto de línea */
     .premium-pagination-box div:last-child,
     .premium-pagination-box nav,
     .premium-pagination-box ul,
